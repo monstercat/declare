@@ -101,10 +101,20 @@ function getRouteNode (path) {
     target = node;
     break;
   }
+  if (!target) return;
   return {
     node: target
     matches: matches
   };
+}
+
+function cloneNodeAsElement (node, tagname) {
+  var el = document.createElement(tagname);
+  for (var i=0; i<node.attributes.length; i++) {
+    var o = node.attributes[0];
+    el.setAttribute(o.name, o.value);
+  }
+  return el;
 }
 
 function getFromDotString (obj, str) {
