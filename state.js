@@ -29,7 +29,7 @@ function readState () {
   return node;
 }
 
-function startState (fn) {
+function startState () {
   function on (e) {
     changeState(e.state);
   }
