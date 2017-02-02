@@ -116,32 +116,6 @@ function findNodes (pattern, context) {
 }
 
 /**
- * Gets the route node that has regex that matches the path. Object return
- *
- * @arg {String} path - The path regex is tested on.
- *
- * @returns {Object} Object that contains "node" and it's "matches". 
- */
-function getRouteNode (path) {
-  var nodes = findNodes('[data-route]');
-  var matches, target;
-  for (var i=0; i<nodes.length; i++) {
-    var node = nodes[i];
-    var rx = new RegExp(node.getAttribute('data-route'));
-    if (!re.test(path)) continue;
-    matches = path.match(re);
-    if (!matches) continue;
-    target = node;
-    break;
-  }
-  if (!target) return;
-  return {
-    node: target
-    matches: matches
-  };
-}
-
-/**
  * Creates a new element and copies the attributes of the provided node.
  *
  * @arg {Node}   node    - The node to copy attributes from.
