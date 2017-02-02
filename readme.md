@@ -100,7 +100,7 @@ The following is an example of a setup you may implement.
 </script>
 ```
 
-####### JS
+###### JS
 
 ```
 var tbody = findNode("tbody");
