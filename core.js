@@ -123,7 +123,7 @@ function findNodes (pattern, context) {
  * @returns {Object} Object that contains "node" and it's "matches". 
  */
 function getRouteNode (path) {
-  var nodes = findNodes('script[data-route]');
+  var nodes = findNodes('[data-route]');
   var matches, target;
   for (var i=0; i<nodes.length; i++) {
     var node = nodes[i];
