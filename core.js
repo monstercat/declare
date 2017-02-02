@@ -2,9 +2,9 @@
  * This is the callback for request method.
  *
  * @callback requestCallback
- * @param {Error} An error if any occured.
- * @param {String} The response body of the XHR reqeust.
- * @param {XMLHttpRequest} The XHR object used.
+ * @param {Error} err An error if any occured.
+ * @param {String} text The response body of the XHR reqeust.
+ * @param {XMLHttpRequest} xhr The XHR object used.
  */
 
 /**
