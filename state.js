@@ -65,7 +65,7 @@ function startState () {
 /**
  * Gets the route node that has regex that matches the path. Object return
  *
- * @arg {String} path - The path regex is tested on.
+ * @arg {String} path The path regex is tested on.
  *
  * @returns {Object} Object that contains "node" and it's "matches". 
  */
@@ -92,7 +92,7 @@ function getRouteNode (path) {
  * If the object does not have a path and does have a target it creates it. For
  * browser compatability.
  *
- * @arg {Node} e The node to create a path on.
+ * @arg {Event} e The event to create a path on.
  */
 function addEventPath(e) {
   if (e.path) return;

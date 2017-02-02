@@ -1,11 +1,20 @@
 /**
+ * This is the callback for request method.
+ *
+ * @callback requestCallback
+ * @param {Error} An error if any occured.
+ * @param {String} The response body of the XHR reqeust.
+ * @param {XMLHttpRequest} The XHR object used.
+ */
+
+/**
  * A simple XMLHttpRequest wrapper method. 
  *
- * @param {String}  opts.url     - resource to hit, required
- * @param {String}  opts.method  - HTTP method to use
- * @param {Object}  opts.headers - an object of HTTP headers
- * @param {Boolean} opts.cors    - use CORS 
- * @param {Boolean} opts.withCredentials - same as opts.cors
+ * @param {String} opts.url The resource to hit, required
+ * @param {String} opts.method The HTTP method to use
+ * @param {Object} opts.headers An object of HTTP headers
+ * @param {Boolean} opts.cors Enable CORS on the request
+ * @param {Boolean} opts.withCredentials Same as opts.cors
  * @param {requestCallback} done
  *
  * @returns {XMLHttpRequest}
@@ -34,20 +43,12 @@ function request (opts, done) {
   xhr.send(opts.data);
   return xhr;
 }
-/**
- * This is the callback for request method.
- *
- * @callback requestCallback
- * @param {Error}          - An error if any occured.
- * @param {String}         - The response body of the XHR reqeust.
- * @param {XMLHttpRequest} - The XHR object used.
- */
 
 /*
  * Simple caching method for set, get, reset.
  *
- * @param {String} source - key to set/get 
- * @param {Object} obj    - value to set
+ * @param {String} source The key to set/get 
+ * @param {Object} obj    The value to set
  */
 function cache (source, obj) {
   var _ = cache._;
@@ -70,11 +71,11 @@ function cache (source, obj) {
  * Same as "request" but caches the XMLHttpRequest. Useful for when you may have
  * the same source in many elements.
  *
- * @param {String}  opts.url     - resource to hit, required
- * @param {String}  opts.method  - HTTP method to use
- * @param {Object}  opts.headers - an object of HTTP headers
- * @param {Boolean} opts.cors    - use CORS 
- * @param {Boolean} opts.withCredentials - same as opts.cors
+ * @param {String} opts.url The resource to hit, required
+ * @param {String} opts.method The HTTP method to use
+ * @param {Object} opts.headers An object of HTTP headers
+ * @param {Boolean} opts.cors Enable CORS on the request
+ * @param {Boolean} opts.withCredentials Same as opts.cors
  * @param {requestCallback} done
  *
  * @returns {XMLHttpRequest}
@@ -95,8 +96,8 @@ function requestCached (opts, done) {
 /**
  * Wrapper for querySelector.
  *
- * @arg {String} pattern - CSS string pattern.
- * @arg {Node}   context - the context to query on.
+ * @arg {String} pattern The CSS string pattern.
+ * @arg {Node} context The context to query on.
  */
 function findNode (pattern, context) {
   return (context || document).querySelector(pattern)
@@ -105,8 +106,8 @@ function findNode (pattern, context) {
 /**
  * Wrapper for querySelectorAll.
  *
- * @arg {String} pattern - CSS string pattern.
- * @arg {Node}   context - the context to query on.
+ * @arg {String} pattern The CSS string pattern.
+ * @arg {Node} context The context to query on.
  *
  * @returns {Node[]}
  */
@@ -118,8 +119,8 @@ function findNodes (pattern, context) {
 /**
  * Creates a new element and copies the attributes of the provided node.
  *
- * @arg {Node}   node    - The node to copy attributes from.
- * @arg {String} tagname - The tagname to use.
+ * @arg {Node} node The node to copy attributes from.
+ * @arg {String} tagname The tagname to use.
  *
  * @returns {Element}
  */
@@ -135,8 +136,8 @@ function cloneNodeAsElement (node, tagname) {
 /**
  * Gets the value from an object using a dot string syntax.
  *
- * @arg {Object} obj - The Object to query.
- * @arg {String} str - The dot string path.
+ * @arg {Object} obj The Object to query.
+ * @arg {String} str The dot string path.
  * 
  * @returns {Object}
  */
@@ -155,8 +156,8 @@ function getFromDotString (obj, str) {
 /**
  * Gets a valid function from the context.
  *
- * @arg {String} path    - The dot string query to use.
- * @arg {Object} context - The context object to query.
+ * @arg {String} path The dot string query to use.
+ * @arg {Object} context The context object to query.
  *
  * @returns {Function}
  */
@@ -177,7 +178,7 @@ function dummyMethod () {
  * Finds all nodes of the node provided who have "data-source" attribute and
  * runs loadNodeSource on them.
  *
- * @arg {Node} parent - The node to find children with the attribute.
+ * @arg {Node} parent The node to find children with the attribute.
  */
 function loadNodeSources (parent) {
   var nodes = findNodes('[data-source]', parent);
@@ -192,7 +193,7 @@ function loadNodeSources (parent) {
  * can declare "data-process" attributes which will be ran. Declare the
  * "data-cors" attribute to enable CORS on request.
  *
- * @arg {Node} node - The node to operate on.
+ * @arg {Node} node The node to operate on.
  */
 function loadNodeSource (node) {
   var source = node.getAttribute('data-source');
@@ -211,7 +212,7 @@ function loadNodeSource (node) {
 /**
  * Converts an object to a query string. Only supports flat structured objects.
  *
- * @arg {Object} obj - The Object to convert to a string.
+ * @arg {Object} obj The Object to convert to a string.
  *
  * returns {String}
  */
@@ -224,7 +225,7 @@ function objectToQueryString (obj) {
 /**
  * Converts a query string to an object.
  *
- * @arg {String} str - The string to convert an Object.
+ * @arg {String} str The string to convert an Object.
  *
  * @returns {Object}
  */

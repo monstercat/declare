@@ -1,7 +1,7 @@
 /**
  * Simple function to retrieve a template node.
  *
- * @arg {String} name - the name of the template to look up.
+ * @arg {String} name The name of the template to look up.
  *
  * @returns {Element}
  */
@@ -26,12 +26,12 @@ function getPartials () {
 /**
  * Renders the content of a template. Supports mustache templates if detected.
  *
- * @arg {String}  name     - name of template to look up.
- * @arg {Object}  scope    - the object of data to use to render with.
- * @arg {Element} el       - the parent element to render in. If none provided
- *                           one will be created. Use "data-tagname" to specify
- *                           tag in template.
- * @arg {Object}  partials - the partials to be used in rendering.
+ * @arg {String}  name The name of template to look up.
+ * @arg {Object}  scope The object of data to use to render with.
+ * @arg {Element} el The parent element to render in. If none provided
+ *                   one will be created. Use "data-tagname" to specify
+ *                   tag in template.
+ * @arg {Object}  partials The partials to be used in rendering.
  * 
  * @returns {Element}
  */
