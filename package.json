@@ -1,0 +1,19 @@
+{
+  "name": "declare",
+  "version": "1.0.0",
+  "description": "DeclareJS for monstercat sites.",
+  "main": "core.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vindexus/declare.git"
+  },
+  "author": "Thomas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vindexus/declare/issues"
+  },
+  "homepage": "https://github.com/Vindexus/declare#readme"
+}
