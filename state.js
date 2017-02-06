@@ -23,6 +23,7 @@ function go (url, state, title) {
  */
 function changeState (url, state, title) {
   var el = readState();
+  title = typeof(title) == 'string' ? title : el.getAttribute('data-title')
   var ev = new CustomEvent("changestate", {
     detail: {
       element: el,
@@ -134,4 +135,13 @@ function interceptClick (e) {
   if (url.indexOf('http') == 0) return;
   e.preventDefault();
   go(url);
+}
+
+/**
+ * Set the page title
+ *
+ * @arg {String} title Title to set the page too
+ */
+function setPageTitle (title) {
+  document.title = title
 }
