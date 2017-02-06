@@ -6,7 +6,7 @@
  * @returns {Element}
  */
 function getTemplate (name) {
-  return findOne('[data-template="'+name+'"]');
+  return findNode('[data-template="'+name+'"]');
 }
 
 /**
@@ -15,7 +15,7 @@ function getTemplate (name) {
  * @returns {Element[]}
  */
 function getPartials () {
-  var els = findAll('[data-partial]');
+  var els = findNodes('[data-partial]');
   var obj = {};
   for(var i=0; i<els.length; i++) {
     obj[els[i].getAttribute('data-template')] = els[i].textContent;
@@ -35,7 +35,7 @@ function getPartials () {
  * 
  * @returns {Element}
  */
-function render (name, scope, el, paritals) {
+function render (name, scope, el, partials) {
   var tmpl = getTemplate(name);
   if (!tmpl) return;
   el = el || cloneNodeAsElement(tmpl, tmpl.getAttribute('data-tagname') || 'div');

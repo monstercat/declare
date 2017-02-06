@@ -31,7 +31,7 @@ function changeState (url, state, title) {
       url: url
     }
   });
-  window.dispatch(ev);
+  window.dispatchEvent(ev);
 }
 
 /**
@@ -75,15 +75,19 @@ function getRouteNode (path) {
   for (var i=0; i<nodes.length; i++) {
     var node = nodes[i];
     var rx = new RegExp(node.getAttribute('data-route'));
-    if (!re.test(path)) continue;
-    matches = path.match(re);
-    if (!matches) continue;
+    if (!rx.test(path)) {
+      continue;
+    }
+    matches = path.match(rx);
+    if (!matches) {
+      continue;
+    }
     target = node;
     break;
   }
   if (!target) return;
   return {
-    node: target
+    node: target,
     matches: matches
   };
 }

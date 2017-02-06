@@ -20,7 +20,7 @@
  * @returns {XMLHttpRequest}
  */
 function request (opts, done) {
-  if (typeof opts.url != "String") {
+  if (typeof opts.url != "string") {
     console.warn("Request URL not provided.")
     return done(Error("URL not provided."))
   }
@@ -34,7 +34,7 @@ function request (opts, done) {
     done(Error(msg), null, xhr);
   }
   xhr.open(opts.method || "GET", opts.url)
-  if (typeof opts.headers == "Object") {
+  if (typeof opts.headers == "object") {
     for (var key in opts.headers) {
       xhr.setRequestHeader(key, opts.headers[key]);
     }
@@ -42,6 +42,19 @@ function request (opts, done) {
   xhr.withCredentials = !!opts.withCredentials || !!opts.cors;
   xhr.send(opts.data);
   return xhr;
+}
+
+function requestJSON (opts, done) {
+  return request(opts, function (err, text, xhr) {
+    try {
+      var json = JSON.parse(text)
+    }
+    catch (ex) {
+      return done(ex, null, xhr)
+    }
+
+    return done(null, json, xhr)
+  })
 }
 
 /*
@@ -127,7 +140,7 @@ function findNodes (pattern, context) {
 function cloneNodeAsElement (node, tagname) {
   var el = document.createElement(tagname);
   for (var i=0; i<node.attributes.length; i++) {
-    var o = node.attributes[0];
+    var o = node.attributes[i];
     el.setAttribute(o.name, o.value);
   }
   return el;
@@ -162,8 +175,8 @@ function getFromDotString (obj, str) {
  * @returns {Function}
  */
 function getMethod (path, context) {
-  var fn = getFromDotString((context || window), name);
-  if (typeof fn != 'Function') return undefined;
+  var fn = getFromDotString((context || window), path);
+  if (typeof fn != 'function') return undefined;
   return fn;
 }
 
@@ -197,9 +210,10 @@ function loadNodeSources (parent) {
  */
 function loadNodeSource (node) {
   var source = node.getAttribute('data-source');
-  var process = getMethod(node.getAttribute('data-process')) || dummyMethod;
-  if (!source) return;
+  var dataProcess = node.getAttribute('data-process')
+  var process = getMethod(dataProcess) || dummyMethod;
   process('start', node);
+  if (!source) return;
   requestCached({
     url: source,
     cors: !!node.hasAttribute('data-cors')
