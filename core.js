@@ -40,12 +40,19 @@ function request (opts, done) {
     }
   }
   xhr.withCredentials = !!opts.withCredentials || !!opts.cors;
-  xhr.send(opts.data);
+  var delay = opts.delay || 0
+  setTimeout(function () {
+    xhr.send(opts.data);
+  }, delay)
   return xhr;
 }
 
 function requestJSON (opts, done) {
   return request(opts, function (err, text, xhr) {
+    if(err) {
+      return done(err, null, xhr)
+    }
+
     try {
       var json = JSON.parse(text)
     }

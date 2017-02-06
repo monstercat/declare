@@ -18,7 +18,7 @@ function getPartials () {
   var els = findNodes('[data-partial]');
   var obj = {};
   for(var i=0; i<els.length; i++) {
-    obj[els[i].getAttribute('data-template')] = els[i].textContent;
+    obj[els[i].getAttribute('data-partial')] = els[i].textContent;
   }
   return obj;
 }
@@ -37,6 +37,7 @@ function getPartials () {
  */
 function render (name, scope, el, partials) {
   var tmpl = getTemplate(name);
+  partials = partials || getPartials()
   if (!tmpl) return;
   el = el || cloneNodeAsElement(tmpl, tmpl.getAttribute('data-tagname') || 'div');
   if (Mustache && Mustache.render) {
@@ -46,4 +47,17 @@ function render (name, scope, el, partials) {
     el.innerHTML = tmpl.textContent;
   }
   return el;
+}
+
+/**
+ * Renders the content of a template into the [role=content] element
+ *
+ * @arg {String}  name The name of template to look up.
+ * @arg {Object}  scope The object of data to use to render with.
+ * @arg {Object}  partials The partials to be used in rendering.
+ * 
+ * @returns {Element}
+ */
+function renderContent (name, scope, partials) {
+  return render(name, scope, findNode('[role=content]'), partials)
 }
