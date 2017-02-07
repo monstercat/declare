@@ -131,6 +131,7 @@ function interceptClick (e) {
     }
   }
   if (!isAnchor || !t.hasAttribute('href')) return;
+  if(t.hasAttribute('download')) return;
   var url = t.getAttribute("href");
   if (url.indexOf('http') == 0) return;
   e.preventDefault();
