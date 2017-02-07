@@ -168,6 +168,7 @@ function cloneNodeAsElement (node, tagname) {
  * @returns {Object}
  */
 function getFromDotString (obj, str) {
+  if(!str) return undefined
   var pieces = str.split('.');
   var parent = obj;
   var target;
@@ -210,7 +211,7 @@ function loadNodeSources (parent) {
   var nodes = findNodes('[data-source]', parent);
   for (var i=0; i<nodes.length; i++) {
     var node = nodes[i];
-    loadNodeSource(node);    
+    loadNodeSource(node);
   }
 }
 

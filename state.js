@@ -23,6 +23,9 @@ function go (url, state, title) {
  */
 function changeState (url, state, title) {
   var el = readState();
+  if(!el) {
+    throw new Error('No el for state')
+  }
   title = typeof(title) == 'string' ? title : el.getAttribute('data-title')
   var ev = new CustomEvent("changestate", {
     detail: {
