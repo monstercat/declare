@@ -50,7 +50,7 @@ function request (opts, done) {
 function requestJSON (opts, done) {
   return request(opts, function (err, text, xhr) {
     if(err) {
-      return done(err, null, xhr)
+      return done(err, "", xhr)
     }
 
     try {

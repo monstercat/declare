@@ -18,7 +18,7 @@ function getPartials () {
   var els = findNodes('[data-partial]');
   var obj = {};
   for(var i=0; i<els.length; i++) {
-    obj[els[i].getAttribute('data-partial')] = els[i].textContent;
+    obj[els[i].getAttribute('data-template')] = els[i].textContent;
   }
   return obj;
 }
@@ -37,7 +37,7 @@ function getPartials () {
  */
 function render (name, scope, el, partials) {
   var tmpl = getTemplate(name);
-  partials = partials || getPartials()
+  partials = partials || render.defaultPartials
   if (!tmpl) return;
   el = el || cloneNodeAsElement(tmpl, tmpl.getAttribute('data-tagname') || 'div');
   if (Mustache && Mustache.render) {
@@ -48,6 +48,7 @@ function render (name, scope, el, partials) {
   }
   return el;
 }
+render.defaultPartials = {}
 
 /**
  * Renders the content of a template into the [role=content] element
