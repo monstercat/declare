@@ -48,6 +48,12 @@ function request (opts, done) {
 }
 
 function requestJSON (opts, done) {
+  if (typeof opts.headers != 'object') opts.headers = {}
+  opts.headers['Accept'] = 'application/json'
+  if (opts.data) {
+    opts.headers['Content-Type'] = 'application/json'
+    opts.data = JSON.stringify(opts.data)
+  }
   return request(opts, function (err, text, xhr) {
     if(err) {
       return done(err, "", xhr)
