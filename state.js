@@ -106,7 +106,7 @@ function addEventPath(e) {
   var arr = [];
   var i = e.target;
   while (i) {
-    arr.push[i];
+    arr.push(i);
     i = i.parentElement;
   }
   e.path = arr;
