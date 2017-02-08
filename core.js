@@ -21,17 +21,57 @@
  */
 function request (opts, done) {
   if (typeof opts.url != "string") {
-    console.warn("Request URL not provided.")
-    return done(Error("URL not provided."))
+    console.warn("Request URL not provided.");
+    return done(Error("URL not provided."));
   }
+  var delay = opts.delay || 0;
+  var start = Date.now();
+  var fn = function () {
+    var now = Date.now();
+    var delta = now - start;
+    var args = arguments;
+    var cb = function () {
+      done.apply(this, args)
+    }
+    if (delta > delay) cb();
+    else setTimeout(cb, delay - delta);
+  }
+
+  if (typeof opts.headers != 'object') {
+    opts.headers = {}
+  }
+
+  //Assume if we have no headers set and that we're sending an object that it is JSON
+  if(opts.data && typeof(opts.data) == 'object' && !opts.headers['Accept']) {
+    opts.headers['Accept'] = 'application/json'
+    opts.headers['Content-Type'] = 'application/json'
+    opts.data = JSON.stringify(opts.data)
+  }
+
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function () {
     if (xhr.readyState != 4) return;
-    if (xhr.status >= 200 && xhr.status < 400) {
-      return done(null, xhr.responseText, xhr);
+    var obj, err;
+    if (xhr.getResponseHeader("Content-Type").indexOf('application/json') >= 0) {
+      try {
+        obj = JSON.parse(xhr.responseText);
+      } catch (e) {
+        console.warn(e)
+        err = e
+      }
+    } else {
+      obj = xhr.responseText
     }
-    var msg = xhr.responseText || "A connection error occured.";
-    done(Error(msg), null, xhr);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      return fn(err, obj, xhr);
+    }
+    err = Error("A connection error occured.");
+    if (typeof obj == 'object' && typeof obj.message != 'undefined') {
+      err.message = obj.message
+    } else if (typeof obj != 'undefined' && !!xhr.responseText) {
+      err.message = xhr.responseText
+    }
+    fn(err, null, xhr);
   }
   xhr.open(opts.method || "GET", opts.url)
   if (typeof opts.headers == "object") {
@@ -40,34 +80,8 @@ function request (opts, done) {
     }
   }
   xhr.withCredentials = !!opts.withCredentials || !!opts.cors;
-  var delay = opts.delay || 0
-  setTimeout(function () {
-    xhr.send(opts.data);
-  }, delay)
+  xhr.send(opts.data);
   return xhr;
-}
-
-function requestJSON (opts, done) {
-  if (typeof opts.headers != 'object') opts.headers = {}
-  opts.headers['Accept'] = 'application/json'
-  if (opts.data) {
-    opts.headers['Content-Type'] = 'application/json'
-    opts.data = JSON.stringify(opts.data)
-  }
-  return request(opts, function (err, text, xhr) {
-    if(err) {
-      return done(err, "", xhr)
-    }
-
-    try {
-      var json = JSON.parse(text)
-    }
-    catch (ex) {
-      return done(ex, null, xhr)
-    }
-
-    return done(null, json, xhr)
-  })
 }
 
 /*
@@ -223,14 +237,18 @@ function loadNodeSources (parent) {
  * @arg {Node} node The node to operate on.
  */
 function loadNodeSource (node) {
-  var source = node.getAttribute('data-source');
+  var source = node.getAttribute('data-source')
   var dataProcess = node.getAttribute('data-process')
   var process = getMethod(dataProcess) || dummyMethod;
   process('start', node);
   if (!source) return;
+  source = source.replace(/\$(\w+)/g, function (str, name) {
+    return window[name] ? window[name].toString() : name
+  })
   requestCached({
     url: source,
-    cors: !!node.hasAttribute('data-cors')
+    cors: !!node.hasAttribute('data-cors'),
+    delay: parseInt(node.getAttribute('data-delay'))
   }, function (err, body, xhr) {
     process('finish', node, err, body, xhr);
     loadNodeSources(node);
