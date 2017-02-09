@@ -25,3 +25,6 @@ function formDataToObject(formData) {
   }, {});
 }
 
+function formToData (form) {
+  return formDataToObject(new FormData(form))
+}
