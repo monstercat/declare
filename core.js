@@ -52,7 +52,8 @@ function request (opts, done) {
   xhr.onreadystatechange = function () {
     if (xhr.readyState != 4) return;
     var obj, err;
-    if (xhr.getResponseHeader("Content-Type").indexOf('application/json') >= 0) {
+    var responseContentType = xhr.getResponseHeader("Content-Type")
+    if (responseContentType && responseContentType.indexOf('application/json') >= 0) {
       try {
         obj = JSON.parse(xhr.responseText);
       } catch (e) {
@@ -154,6 +155,36 @@ function findNode (pattern, context) {
 function findNodes (pattern, context) {
   var nodes = (context || document).querySelectorAll(pattern)
   return Array.prototype.slice.call(nodes)
+}
+
+/**
+ * Wrapper for querySelectorAll.
+ *
+ * @arg {Node} the child node.
+ * @arg {String} the query selector to check against
+ * @arg {Bool} whether to check the child for the pattern too
+ *
+ * @returns {Node}
+ */
+function findParentWith (child, pattern, checkThis) {
+  if(arguments.length == 2) {
+    checkThis = true
+  }
+  if(checkThis) {
+    if(child.matches(pattern)) {
+      return child
+    }
+  }
+  var curr = child
+  do {
+    parent = curr.parentNode
+    if(parent && parent.matches(pattern)) {
+      return parent
+    }
+    curr = parent
+  }
+  while(parent)
+  return false
 }
 
 /**

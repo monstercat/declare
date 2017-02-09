@@ -49,16 +49,3 @@ function render (name, scope, el, partials) {
   return el;
 }
 render.defaultPartials = {}
-
-/**
- * Renders the content of a template into the [role=content] element
- *
- * @arg {String}  name The name of template to look up.
- * @arg {Object}  scope The object of data to use to render with.
- * @arg {Object}  partials The partials to be used in rendering.
- * 
- * @returns {Element}
- */
-function renderContent (name, scope, partials) {
-  return render(name, scope, findNode('[role=content]'), partials)
-}
