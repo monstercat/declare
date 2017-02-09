@@ -235,15 +235,22 @@ function loadNodeSources (parent) {
  * "data-cors" attribute to enable CORS on request.
  *
  * @arg {Node} node The node to operate on.
+ * @arg {Matches} array The matching $ variables in the source that match the URL
  */
-function loadNodeSource (node) {
+function loadNodeSource (node, matches) {
   var source = node.getAttribute('data-source')
   var dataProcess = node.getAttribute('data-process')
   var process = getMethod(dataProcess) || dummyMethod;
   process('start', node);
-  if (!source) return;
+  if (!source) {
+    return;
+  }
   source = source.replace(/\$(\w+)/g, function (str, name) {
-    return window[name] ? window[name].toString() : name
+    var str = window[name] ? window[name].toString() : name
+    if(!isNaN(parseInt(name))) {
+      str = matches[parseInt(name)]
+    }
+    return str
   })
   requestCached({
     url: source,

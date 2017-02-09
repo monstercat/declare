@@ -47,7 +47,7 @@ function readState () {
   if (!result) return;
   var node = cloneNodeAsElement(result.node, 'div'); 
   node.innerHTML = result.node.textContent;
-  loadNodeSource(node);
+  loadNodeSource(node, result.matches);
   return node;
 }
 
