@@ -4,9 +4,11 @@ This project provides a simplified library of methods that you can use in your
 web applications either if it's a single page app or a static page app that you
 need to fetch external data for on the client.
 
+The philosophy for this project is to use what the browser gives you and build on top of that. Thus praticies like using "onclick" javascript attributes are expected. You are to build your own functionality around that and be able to pick pieces of tools you wish to use. Most of the code in this repo is optional.
+
 ## Basic Usage 
 
-The prime way to use this library is to delcare a data source in your html and
+The prime way to use this library is to declare a data source in your html and
 use the library to load the data you wish to see. See example:
 
 ##### Example
