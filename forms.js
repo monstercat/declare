@@ -1,3 +1,10 @@
+/**
+ * Found at https://github.com/christianalfoni/form-data-to-object
+ *
+ * @arg {FormData} formData The form data to convert to an object.
+ *
+ * @returns {Object}
+ */
 function formDataToObject(formData) {
   var source = {}
   for(var pair of formData.entries()) {
@@ -25,6 +32,13 @@ function formDataToObject(formData) {
   }, {});
 }
 
+/**
+ * Wrapper to convert form element data to object.
+ *
+ * @arg {Element} form The form to get data from.
+ *
+ * @returns {Object}
+ */
 function formToData (form) {
   return formDataToObject(new FormData(form))
 }
