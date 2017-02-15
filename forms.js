@@ -39,6 +39,6 @@ function formDataToObject(formData) {
  *
  * @returns {Object}
  */
-function formToData (form) {
+function formToObject (form) {
   return formDataToObject(new FormData(form))
 }
