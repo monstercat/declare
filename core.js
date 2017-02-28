@@ -269,27 +269,31 @@ function loadNodeSources (parent) {
  * @arg {Matches} array The matching $ variables in the source that match the URL
  */
 function loadNodeSource (node, matches) {
+  if (!matches) matches = {}
   var source = node.getAttribute('data-source')
   var dataProcess = node.getAttribute('data-process')
   var process = getMethod(dataProcess) || dummyMethod;
-  process('start', node);
+  process('start', node, null, null, null, matches);
   if (!source) {
     return;
   }
-  source = source.replace(/\$(\w+)/g, function (str, name) {
-    var str = window[name] ? window[name].toString() : name
-    if(!isNaN(parseInt(name))) {
-      str = matches[parseInt(name)]
+  source = source.replace(/\$(\w+)/g, function (str, a) {
+    var match;
+    if(!isNaN(parseInt(a))) {
+      match = matches[parseInt(a)];
     }
-    return str
+    if (!match) {
+      match = getFromDotString(window, a).toString() || a;
+    }
+    return match;
   })
   requestCached({
     url: source,
     cors: !!node.hasAttribute('data-cors'),
     delay: parseInt(node.getAttribute('data-delay'))
   }, function (err, body, xhr) {
-    process('finish', node, err, body, xhr);
-    loadNodeSources(node);
+    process('finish', node, err, body, xhr, matches);
+    loadNodeSources(node, matches);
   });
 }
 
