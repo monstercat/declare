@@ -19,7 +19,6 @@ function formDataToObject(formData) {
     var currentPath = output;
     while (paths.length) {
       var pathKey = paths.shift();
-
       if (pathKey in currentPath) {
         currentPath = currentPath[pathKey];
       } else {
@@ -30,6 +29,27 @@ function formDataToObject(formData) {
 
     return output;
   }, {});
+}
+
+/**
+* Fixes form data objects with numberic keys where some may have been removed
+* This turns {data: {0: 'one', 2: 'three'}} into data {0: 'one', 1: 'three'}
+* @returns {Object}
+*/
+function fixFormDataIndexes (formData, fields) {
+  fields.forEach(function (name) {
+    var ev = 'var value = formData.' + name
+    eval(ev)
+    if(value != undefined) {
+      var newVal = []
+      for(var k in value) {
+        newVal.push(value[k])
+      }
+      var set = 'formData.' + name + ' = newVal'
+      eval(set)
+    }
+  })
+  return formData
 }
 
 /**
