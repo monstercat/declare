@@ -34,16 +34,34 @@ function formDataToObject(formData) {
 /**
 * Fixes form data objects with numberic keys where some may have been removed
 * This turns {data: {0: 'one', 2: 'three'}} into data {0: 'one', 1: 'three'}
+* And also turns {itemOne: '1', itemEight: '1'} into ['itemOne', 'itemEight']
 * @returns {Object}
 */
 function fixFormDataIndexes (formData, fields) {
   fields.forEach(function (name) {
     var ev = 'var value = formData.' + name
     eval(ev)
+
     if(value != undefined) {
       var newVal = []
-      for(var k in value) {
-        newVal.push(value[k])
+      //This is for arrays that might have messed up indexes
+      //this happens when nodes are deleted from the DOM
+      //then FormData is used to get data
+      if(value instanceof Array) {
+        for(var k in value) {
+          newVal.push(value[k])
+        }
+      }
+      //
+      //{gold: 1, sync: 1}
+      //
+      //['gold', 'sync']
+      else if(typeof (value) == 'object') {
+        for(var key in value) {
+          if(value[key] && parseInt(value[key]) != 0) {
+            newVal.push(key)
+          }
+        }
       }
       var set = 'formData.' + name + ' = newVal'
       eval(set)
