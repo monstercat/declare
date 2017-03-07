@@ -61,7 +61,7 @@ render.defaultPartials = {}
  */
 function registerPartials () {
   var partials = getPartials()
-  console.log('partials', partials);
+
   if(window.Handlebars) {
     for(var key in partials) {
       Handlebars.registerPartial(key, partials[key])
