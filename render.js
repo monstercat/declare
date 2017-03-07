@@ -40,8 +40,13 @@ function render (name, scope, el, partials) {
   partials = partials || render.defaultPartials
   if (!tmpl) return;
   el = el || cloneNodeAsElement(tmpl, tmpl.getAttribute('data-tagname') || 'div');
-  if (Mustache && Mustache.render) {
+
+  if (window.Mustache && window.Mustache.render) {
     el.innerHTML = Mustache.render(tmpl.textContent, scope, partials);
+  }
+  else if(window.Handlebars) {
+    var template = Handlebars.compile(tmpl.textContent)
+    el.innerHTML = template(scope)
   }
   else {
     el.innerHTML = tmpl.textContent;
@@ -49,3 +54,20 @@ function render (name, scope, el, partials) {
   return el;
 }
 render.defaultPartials = {}
+
+/**
+ * Finds all the partial views that your app has and registers them.
+ * 
+ */
+function registerPartials () {
+  var partials = getPartials()
+
+  if(window.Handlebars) {
+    for(var key in partials) {
+      Handlebars.registerPartial(key, partials[key])
+    }
+  }
+  else if(window.Mustache) {
+    render.defaultPartials = partials
+  }
+}

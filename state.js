@@ -57,7 +57,7 @@ function readState () {
  */
 function startState () {
   function on (e) {
-    changeState(e.state);
+    changeState(location.pathname + location.search, e.state, '');
   }
   document.addEventListener("DOMContentLoaded", function (e) {
     window.addEventListener("popstate", on);
