@@ -147,4 +147,5 @@ function interceptClick (e) {
  */
 function setPageTitle (title) {
   document.title = title
+  history.replaceState(history.state, title, window.location.toString())
 }
