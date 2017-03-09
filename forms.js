@@ -1,3 +1,29 @@
+function FormDataDeclare (form) {
+  //The good browsers already have this
+  if(FormData.entries) {
+    return new FormData(form)
+  }
+
+  //Safari needs some help
+  this.data = {}
+
+  if(form) {
+    var els = form.querySelectorAll('[name]')
+    els.forEach(function (el) {
+      var name = el.getAttribute('name')
+      var val = el.value
+      this.data[name] = val
+    }.bind(this))
+  }
+}
+
+FormDataDeclare.prototype.entries = function* () {
+  for(var k in this.data) {
+    yield [k, this.data[k]]
+  }
+}
+
+
 /**
  * Found at https://github.com/christianalfoni/form-data-to-object
  *
@@ -78,5 +104,5 @@ function fixFormDataIndexes (formData, fields) {
  * @returns {Object}
  */
 function formToObject (form) {
-  return formDataToObject(new FormData(form))
+  return formDataToObject(new FormDataDeclare(form))
 }
