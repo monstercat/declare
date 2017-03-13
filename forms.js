@@ -1,7 +1,8 @@
 function FormDataDeclare (form) {
   //The good browsers already have this
-  if(FormData.entries) {
-    return new FormData(form)
+  var fd = new FormData(form)
+  if(fd.entries) {
+    return fd
   }
 
   //Safari needs some help
@@ -12,6 +13,9 @@ function FormDataDeclare (form) {
     els.forEach(function (el) {
       var name = el.getAttribute('name')
       var val = el.value
+      if(el.getAttribute('type') == 'checkbox') {
+        val = el.checked
+      }
       this.data[name] = val
     }.bind(this))
   }
