@@ -7,6 +7,9 @@
  * @arg {String} title The title of the state.
  */
 function go (url, state, title) {
+  if(url.indexOf('javascript') == 0) {
+    return
+  }
   state = state || {};
   title = title || {};
   history.pushState(state, title, url);
