@@ -122,19 +122,19 @@ function cache (source, obj) {
  * @returns {XMLHttpRequest}
  */
 function requestCached (opts, done) {
-  var cached = cache(opts.url)
+  var key = opts.method + '_' + opts.url
+  var cached = cache(key)
   if (cached) {
-    var headers = cached.getAllResponseHeaders();
-    if(headers.indexOf('Content-Type: application/json') >= 0) {
-      return done(null, JSON.parse(cached.responseText), cached);
-    }
-    else {
-      return done(null, cached.responseText, cached);
-    }
+    return done(null, cached.body, cached.xhr);
   } 
   else {
     request(opts, function (err, body, xhr) {
-      if (!err) cache(opts.url, xhr); 
+      if (!err) {
+        cache(key, {
+          body: body,
+          xhr: xhr
+        });
+      }
       done(err, body, xhr);
     });
   }
