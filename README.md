@@ -18,7 +18,7 @@ use the library to load the data you wish to see. See example:
 ```
 <div 
   data-source="https://connect.monstercat.com/api/catalog/browse?limit=25"
-  data-process="doBrowse">
+  data-process="processBrowse">
 </div>
 ```
 
@@ -79,7 +79,7 @@ The following is an example of a setup you may implement.
   </thead>
   <tbody
     data-source="https://connect.monstercat.com/api/catalog/browse?limit=25"
-    data-process="doBrowse">
+    data-process="processBrowse">
     <tr>
       <td colspan=4>Loading...</td>
     </tr>

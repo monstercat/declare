@@ -124,7 +124,13 @@ function cache (source, obj) {
 function requestCached (opts, done) {
   var cached = cache(opts.url)
   if (cached) {
-    return done(null, cached.responseText, cached);
+    var headers = cached.getAllResponseHeaders();
+    if(headers.indexOf('Content-Type: application/json') >= 0) {
+      return done(null, JSON.parse(cached.responseText), cached);
+    }
+    else {
+      return done(null, cached.responseText, cached);
+    }
   } 
   else {
     request(opts, function (err, body, xhr) {
