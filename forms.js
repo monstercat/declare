@@ -69,22 +69,22 @@ function formDataToObject(formData) {
  * @returns {Object}
  */
 function objectToFormData(obj) {
-  function recur(newObj, propName, currVal) {
+  function recur(formData, propName, currVal) {
     if (Array.isArray(currVal) || Object.prototype.toString.call(currVal) === '[object Object]') {
       Object.keys(currVal).forEach(function(v) {
-        recur(newObj, propName + "[" + v + "]", currVal[v]);
+        recur(formData, propName + "[" + v + "]", currVal[v]);
       });
-      return newObj;
+      return formData;
     }
 
-    newObj[propName] = currVal;
-    return newObj;
+    formData.append(propName, currVal);
+    return formData;
   }
 
   var keys = Object.keys(obj);
-  return keys.reduce(function(newObj, propName) {
-    return recur(newObj, propName, obj[propName]);
-  }, {});
+  return keys.reduce(function(formData, propName) {
+    return recur(formData, propName, obj[propName]);
+  }, new FormData());
 }
 
 /**
