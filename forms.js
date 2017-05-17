@@ -62,6 +62,32 @@ function formDataToObject(formData) {
 }
 
 /**
+ * Found at https://github.com/christianalfoni/form-data-to-object
+ *
+ * @arg {Object} obj - The data object.
+ *
+ * @returns {Object}
+ */
+function objectToFormData(obj) {
+  function recur(newObj, propName, currVal) {
+    if (Array.isArray(currVal) || Object.prototype.toString.call(currVal) === '[object Object]') {
+      Object.keys(currVal).forEach(function(v) {
+        recur(newObj, propName + "[" + v + "]", currVal[v]);
+      });
+      return newObj;
+    }
+
+    newObj[propName] = currVal;
+    return newObj;
+  }
+
+  var keys = Object.keys(obj);
+  return keys.reduce(function(newObj, propName) {
+    return recur(newObj, propName, obj[propName]);
+  }, {});
+}
+
+/**
 * Fixes form data objects with numberic keys where some may have been removed
 * This turns {data: {0: 'one', 2: 'three'}} into data {0: 'one', 1: 'three'}
 * And also turns {itemOne: '1', itemEight: '1'} into ['itemOne', 'itemEight']
