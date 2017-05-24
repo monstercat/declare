@@ -42,7 +42,7 @@ function request (opts, done) {
   }
 
   //Assume if we have no headers set and that we're sending an object that it is JSON
-  if(opts.data && typeof(opts.data) == 'object' && !opts.headers['Accept']) {
+  if(opts.data && typeof(opts.data) == 'object' && !(opts.data instanceof FormData) && !opts.headers['Accept']) {
     opts.headers['Accept'] = 'application/json'
     opts.headers['Content-Type'] = 'application/json'
     opts.data = JSON.stringify(opts.data)
