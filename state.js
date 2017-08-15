@@ -135,10 +135,11 @@ function interceptClick (e) {
       break;
     }
   }
-  if (!isAnchor || !t.hasAttribute('href')) return;
+  if (!isAnchor || !t.hasAttribute("href")) return;
   if(t.hasAttribute('download')) return;
   var url = t.getAttribute("href");
-  if (url.indexOf('http') == 0) return;
+  if (url.indexOf("http") == 0) return;
+  if (url.indexOf("javascript:") == 0) return;
   e.preventDefault();
   go(url);
 }
