@@ -7,9 +7,6 @@
  * @arg {String} title The title of the state.
  */
 function go (url, state, title) {
-  if(url.indexOf('javascript') == 0) {
-    return
-  }
   state = state || {};
   title = title || {};
   history.pushState(state, title, url);
@@ -136,12 +133,17 @@ function interceptClick (e) {
     }
   }
   if (!isAnchor || !t.hasAttribute("href")) return;
-  if(t.hasAttribute('download')) return;
+  if (t.hasAttribute("download")) return;
   var url = t.getAttribute("href");
-  if (url.indexOf("http") == 0) return;
-  if (url.indexOf("javascript:") == 0) return;
+  if (!isRelativeUrl(url)) return;
   e.preventDefault();
   go(url);
+}
+
+function isRelativeUrl (url) {
+  if (url.indexOf("http") == 0) return false;
+  if (url.indexOf("javascript:") == 0) return false;
+  return true;
 }
 
 /**
