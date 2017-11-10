@@ -289,7 +289,8 @@ function loadNodeSource (node, matches) {
       match = matches[parseInt(a)];
     }
     if (!match) {
-      match = getFromDotString(window, a).toString() || a;
+      var x = getFromDotString(window, a)
+      match = x != undefined ? x.toString() : a;
     }
     return match;
   })
