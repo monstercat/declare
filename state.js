@@ -61,7 +61,7 @@ function startState () {
   }
   document.addEventListener("DOMContentLoaded", function (e) {
     window.addEventListener("popstate", on);
-    on();
+    on(e);
   });
 }
 

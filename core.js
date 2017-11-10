@@ -283,7 +283,7 @@ function loadNodeSource (node, matches) {
   if (!source) {
     return;
   }
-  source = source.replace(/\$(\w+)/g, function (str, a) {
+  source = source.replace(/\$([\w\.]+)/g, function (str, a) {
     var match;
     if(!isNaN(parseInt(a))) {
       match = matches[parseInt(a)];
