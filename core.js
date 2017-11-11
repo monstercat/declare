@@ -219,13 +219,13 @@ function cloneNodeAsElement (node, tagname) {
  * @returns {Object}
  */
 function getFromDotString (obj, str) {
-  if(!str) return undefined
+  if (!str) return undefined
   var pieces = str.split('.');
   var parent = obj;
   var target;
   for (var i=0; i<pieces.length; i++) {
     target = parent[pieces[i]];
-    if (!target) return undefined;
+    if (!target && i != pieces.length - 1) return undefined;
     parent = target;
   }
   return target;
