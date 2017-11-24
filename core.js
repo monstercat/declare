@@ -164,33 +164,38 @@ function findNodes (pattern, context) {
 }
 
 /**
- * Wrapper for querySelectorAll.
+ * C style stub for node.matches
  *
- * @arg {Node} the child node.
- * @arg {String} the query selector to check against
- * @arg {Bool} whether to check the child for the pattern too
+ * @arg {String} selector - The selector to match with
+ * @arg {Node} node - The node to do the selector match on
+ *
+ * @returns {Boolean}
+ */ 
+function matchNode (selector, node) {
+  if (node && typeof node.matches == 'function')
+    return node.matches(selector)
+  return false
+}
+
+/**
+ * Finds an element in the tree from the desired depth point that matches the
+ * given CSS selector or function check
+ *
+ * @arg {Node} node - The child node to start at.
+ * @arg {String|Function} matcher - The CSS selector or function to match with.
+ * @arg {Bool} checkThis - Also check the initial node.
  *
  * @returns {Node}
  */
-function findParentWith (child, pattern, checkThis) {
-  if(arguments.length == 2) {
-    checkThis = true
+function findParentWith (node, matcher, checkThis) {
+  if (arguments.length == 2) checkThis = true
+  var check = typeof matcher == 'function' ? matcher : matchNode.bind(null, matcher)
+  if (checkThis && check(node)) return node
+  while (node) {
+    node = node.parentNode
+    if (check(node)) return node
   }
-  if(checkThis) {
-    if(child.matches(pattern)) {
-      return child
-    }
-  }
-  var curr = child
-  do {
-    parent = curr.parentNode
-    if(parent && parent.matches(pattern)) {
-      return parent
-    }
-    curr = parent
-  }
-  while(parent)
-  return false
+  return undefined
 }
 
 /**
