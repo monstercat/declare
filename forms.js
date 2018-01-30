@@ -122,6 +122,9 @@ function fixFormDataIndexes (formData, fields) {
       var set = 'formData.' + name + ' = newVal'
       eval(set)
     }
+    else {
+      eval('formData.' + name + ' = []')
+    }
   })
   return formData
 }
