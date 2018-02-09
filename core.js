@@ -24,17 +24,18 @@ function request (opts, done) {
     console.warn("Request URL not provided.");
     return done(Error("URL not provided."));
   }
-  var delay = opts.delay || 0;
-  var start = Date.now();
-  var fn = function () {
-    var now = Date.now();
-    var delta = now - start;
-    var args = arguments;
-    var cb = function () {
-      done.apply(this, args)
+  var delay = opts.delay || 0
+  var start = Date.now()
+  var fn = done
+  if (opts.delay > 0) {
+    fn = function () {
+      var now = Date.now()
+      var delta = now - start
+      if (delta > delay)
+        done.apply(null, arguments)
+      else
+        setTimeout(done.bind(null, arguments), delay - delta)
     }
-    if (delta > delay) cb();
-    else setTimeout(cb, delay - delta);
   }
 
   if (typeof opts.headers != 'object') {

@@ -29,8 +29,23 @@ function testRequestChainFail (done) {
 	})
 }
 
+function testRequestDelay (done) {
+	var spec = 1000
+	var time = (new Date).getTime()
+	request({
+		url: "https://raw.githubusercontent.com/monstercat/docs/master/404.md",
+		delay: spec
+	}, (err, body, xhr)=> {
+		var delta = (new Date()).getTime() - time
+		if (delta >= spec)
+			return done()
+		return done(Error('Delay did not last specification.'))
+	})
+}
+
 testRequestChain((err)=> console.log("testRequestChain: ", err || "succeeded"))
 testRequestChainFail((err)=> console.log("testRequestChainFail: ", err || "succeeded"))
+testRequestDelay((err)=> console.log("testRequestDelay: ", err || "succeeded"))
 
 </script>
 </body>
