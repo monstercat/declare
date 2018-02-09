@@ -8,7 +8,7 @@
  */
 
 /**
- * A simple XMLHttpRequest wrapper method. 
+ * A simple XMLHttpRequest wrapper method.
  *
  * @param {String} opts.url The resource to hit, required
  * @param {String} opts.method The HTTP method to use
@@ -88,7 +88,7 @@ function request (opts, done) {
 /*
  * Simple caching method for set, get, reset.
  *
- * @param {String} source The key to set/get 
+ * @param {String} source The key to set/get
  * @param {Object} obj    The value to set
  */
 function cache (source, obj) {
@@ -112,11 +112,7 @@ function cache (source, obj) {
  * Same as "request" but caches the XMLHttpRequest. Useful for when you may have
  * the same source in many elements.
  *
- * @param {String} opts.url The resource to hit, required
- * @param {String} opts.method The HTTP method to use
- * @param {Object} opts.headers An object of HTTP headers
- * @param {Boolean} opts.cors Enable CORS on the request
- * @param {Boolean} opts.withCredentials Same as opts.cors
+ * @param {Object} opts
  * @param {requestCallback} done
  *
  * @returns {XMLHttpRequest}
@@ -126,7 +122,7 @@ function requestCached (opts, done) {
   var cached = cache(key)
   if (cached) {
     return done(null, cached.body, cached.xhr);
-  } 
+  }
   else {
     request(opts, function (err, body, xhr) {
       if (!err) {
@@ -138,6 +134,52 @@ function requestCached (opts, done) {
       done(err, body, xhr);
     });
   }
+}
+
+/**
+ * For when you need to perform multiple requests in order. Will return early on
+ * first occurance of error.
+ *
+ * @arg {[Object]} arr
+ * @arg {Function} done
+ *
+ * Example
+ *
+ * function processPage (state, node, err, body, xhr, matches) {
+ *   requestChain([
+ *     { url: "https://example.com/a.json" },
+ *     { url: "https://example.com/b.json" }
+ *   ], (err, results)=> {
+ *     // if error handle
+ *     // pluck results[0] and results[1]
+ *   })
+ * }
+ */
+function requestChain (arr, done, results) {
+  if (!(results instanceof Array))
+    results = []
+  if (!arr.length)
+    return done(null, results)
+  results.push({})
+  function requestChainDo (err, body, xhr) {
+    let result = results[results.length - 1]
+    result.error = err
+    result.body = body
+    result.xhr = xhr
+    if (err) return done(err, results)
+    requestChain(arr, done, results)
+  }
+  results[results.length - 1].xhr = request(arr.shift(), requestChainDo)
+  return results
+}
+
+/**
+ * @arg {[Object]} arr
+ */
+function requestChainCancel (arr) {
+  arr.forEach((x)=> {
+    x.xhr.abort()
+  })
 }
 
 /**
@@ -170,7 +212,7 @@ function findNodes (pattern, context) {
  * @arg {Node} node - The node to do the selector match on
  *
  * @returns {Boolean}
- */ 
+ */
 function matchNode (selector, node) {
   if (node && typeof node.matches == 'function')
     return node.matches(selector)
@@ -220,7 +262,7 @@ function cloneNodeAsElement (node, tagname) {
  *
  * @arg {Object} obj The Object to query.
  * @arg {String} str The dot string path.
- * 
+ *
  * @returns {Object}
  */
 function getFromDotString (obj, str) {
