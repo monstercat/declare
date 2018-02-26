@@ -307,6 +307,8 @@ function dummyMethod () {
  * @arg {Node} parent The node to find children with the attribute.
  */
 function loadNodeSources (parent) {
+  if (!parent)
+    return
   var nodes = findNodes('[data-source]', parent);
   for (var i=0; i<nodes.length; i++) {
     var node = nodes[i];
