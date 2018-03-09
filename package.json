@@ -14,5 +14,8 @@
   "bugs": {
     "url": "https://github.com/Monstercat/declare/issues"
   },
-  "homepage": "https://github.com/Monstercat/declare#readme"
+  "homepage": "https://github.com/Monstercat/declare#readme",
+  "devDependencies": {
+    "eslint": "^4.18.2"
+  }
 }

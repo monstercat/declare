@@ -6,11 +6,11 @@
  * @arg {Object} state The state object used for the path.
  * @arg {String} title The title of the state.
  */
-function go (url, state, title) {
-  state = state || {};
-  title = title || {};
-  history.pushState(state, title, url);
-  changeState(url, state, title);
+function go (url, aState, aTitle) {
+  state = aState || {}
+  title = aTitle || {}
+  history.pushState(state, title, url)
+  changeState(url, state, title)
 }
 
 /**
@@ -21,11 +21,13 @@ function go (url, state, title) {
  * @arg {Object} state The state object used for the path.
  * @arg {String} title The title of the state.
  */
-function changeState (url, state, title) {
-  var el = readState();
-  if(el) {
-    title = typeof(title) == 'string' ? title : el.getAttribute('data-title')
-  }
+function changeState (url, state, aTitle) {
+  var title = aTitle
+  var el = readState()
+
+  if (el)
+    title = typeof (title) == 'string' ? title : el.getAttribute('data-title')
+
   var ev = new CustomEvent("changestate", {
     detail: {
       element: el,
@@ -33,22 +35,26 @@ function changeState (url, state, title) {
       title: title,
       url: url
     }
-  });
-  window.dispatchEvent(ev);
+  })
+
+  window.dispatchEvent(ev)
 }
 
 /**
  * Clears the cache, finds the node for the current location, and loads it.
  */
 function readState () {
-  cache();
-  var str = location.pathname.substr(1);
-  var result = getRouteNode(str);
-  if (!result) return;
-  var node = cloneNodeAsElement(result.node, 'div'); 
-  node.innerHTML = result.node.textContent;
-  loadNodeSource(node, result.matches);
-  return node;
+  cache()
+  var str = location.pathname.substr(1)
+  var result = getRouteNode(str)
+
+  if (!result)
+    return undefined
+  var node = cloneNodeAsElement(result.node, 'div')
+
+  node.innerHTML = result.node.textContent
+  loadNodeSource(node, result.matches)
+  return node
 }
 
 /**
@@ -57,12 +63,12 @@ function readState () {
  */
 function startState () {
   function on (e) {
-    changeState(location.pathname + location.search, e.state, '');
+    changeState(location.pathname + location.search, e.state, '')
   }
-  document.addEventListener("DOMContentLoaded", function (e) {
-    window.addEventListener("popstate", on);
-    on(e);
-  });
+  document.addEventListener("DOMContentLoaded", (e) => {
+    window.addEventListener("popstate", on)
+    on(e)
+  })
 }
 
 /**
@@ -70,29 +76,32 @@ function startState () {
  *
  * @arg {String} path The path regex is tested on.
  *
- * @returns {Object} Object that contains "node" and it's "matches". 
+ * @returns {Object} Object that contains "node" and it's "matches".
  */
 function getRouteNode (path) {
-  var nodes = findNodes('[data-route]');
-  var matches, target;
-  for (var i=0; i<nodes.length; i++) {
-    var node = nodes[i];
-    var rx = new RegExp(node.getAttribute('data-route'));
-    if (!rx.test(path)) {
-      continue;
-    }
-    matches = path.match(rx);
-    if (!matches) {
-      continue;
-    }
-    target = node;
-    break;
+  var nodes = findNodes('[data-route]')
+  var matches, target
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i]
+    var rx = new RegExp(node.getAttribute('data-route'))
+
+    if (!rx.test(path))
+      continue
+
+    matches = path.match(rx)
+    if (!matches)
+      continue
+
+    target = node
+    break
   }
-  if (!target) return;
+  if (!target)
+    return undefined
   return {
     node: target,
     matches: matches
-  };
+  }
 }
 
 /**
@@ -102,14 +111,15 @@ function getRouteNode (path) {
  * @arg {Event} e The event to create a path on.
  */
 function addEventPath(e) {
-  if (e.path) return;
-  var arr = [];
-  var i = e.target;
+  if (e.path) return
+  var arr = []
+  var i = e.target
+
   while (i) {
-    arr.push(i);
-    i = i.parentElement;
+    arr.push(i)
+    i = i.parentElement
   }
-  e.path = arr;
+  e.path = arr
 }
 
 /**
@@ -119,31 +129,38 @@ function addEventPath(e) {
  * @arg {Event} e The event used to intercept.
  */
 function interceptClick (e) {
-  addEventPath(e);
-  if ((e.button != undefined && e.button != 0) || e.metaKey) {
-    return true;
-  }
-  if (e.ctrlKey) return;
-  var isAnchor = false;
+  addEventPath(e)
+  if ((e.button != undefined && e.button != 0) || e.metaKey)
+    return true
+
+  if (e.ctrlKey)
+    return undefined
+  var isAnchor = false
+
   for (var i = 0; i < e.path.length; i++) {
-    t = e.path[i];
+    t = e.path[i]
     if (t.tagName == "A") {
-      isAnchor = true;
-      break;
+      isAnchor = true
+      break
     }
   }
-  if (!isAnchor || !t.hasAttribute("href")) return;
-  if (t.hasAttribute("download")) return;
-  var url = t.getAttribute("href");
-  if (!isRelativeUrl(url)) return;
-  e.preventDefault();
-  go(url);
+  if (!isAnchor || !t.hasAttribute("href"))
+    return undefined
+  if (t.hasAttribute("download"))
+    return undefined
+  var url = t.getAttribute("href")
+
+  if (!isRelativeUrl(url))
+    return undefined
+  e.preventDefault()
+  go(url)
+  return undefined
 }
 
 function isRelativeUrl (url) {
-  if (url.indexOf("http") == 0) return false;
-  if (url.indexOf("javascript:") == 0) return false;
-  return true;
+  if (url.indexOf("http") == 0) return false
+  if (url.indexOf("javascript:") == 0) return false
+  return true
 }
 
 /**
