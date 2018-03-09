@@ -180,7 +180,7 @@ function requestChain (arr, done, aResults) {
     result.body = body
     result.xhr = xhr
     if (err) {
-      done(err, arr.map((x, i) => results[i] || {}))
+      done(err, results.concat(arr.map(x => Object())))
       return
     }
     requestChain(arr, done, results)
