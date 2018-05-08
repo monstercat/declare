@@ -33,19 +33,22 @@ function request (opts, done) {
       var now = Date.now()
       var delta = now - start
 
-      if (delta > delay)
+      if (delta > delay) {
         done.apply(null, arguments)
-      else
+      } else {
         setTimeout(done.bind(null, arguments), delay - delta)
+      }
     }
   }
 
-  if (typeof opts.headers != 'object')
+  if (typeof opts.headers != 'object') {
     opts.headers = {}
+  }
 
-  // Assume if we have no headers set and that we're sending an object that it
-  // is JSON
-  if (opts.data && typeof (opts.data) == 'object' && !(opts.data instanceof FormData) && !opts.headers.Accept) {
+  //Assume if no headers set and that we're sending an obj that it's JSON
+  if (opts.data && typeof opts.data == 'object'
+    && !(opts.data instanceof FormData)
+    && !opts.headers.Accept) {
     opts.headers.Accept = 'application/json'
     opts.headers['Content-Type'] = 'application/json'
     opts.data = JSON.stringify(opts.data)
@@ -54,8 +57,9 @@ function request (opts, done) {
   var xhr = new XMLHttpRequest()
 
   xhr.onreadystatechange = function onReadyStateChange () {
-    if (xhr.readyState != XMLHttpRequest.DONE)
+    if (xhr.readyState != XMLHttpRequest.DONE) {
       return
+    }
     var obj, err
     var responseContentType = xhr.getResponseHeader("Content-Type")
 
@@ -73,19 +77,20 @@ function request (opts, done) {
       fn(err, obj, xhr)
       return
     }
-
     err = Error("A connection error occured.")
-    if (typeof obj == 'object' && typeof obj.message != 'undefined')
+    if (typeof obj == 'object' && typeof obj.message != 'undefined') {
       err.message = obj.message
-    else if (typeof obj != 'undefined' && !!xhr.responseText)
+    }
+    else if (typeof obj != 'undefined' && !!xhr.responseText) {
       err.message = xhr.responseText
-
+    }
     fn(err, null, xhr)
   }
   xhr.open(opts.method || "GET", opts.url)
   if (typeof opts.headers == "object") {
-    for (var key in opts.headers)
+    for (var key in opts.headers) {
       xhr.setRequestHeader(key, opts.headers[key])
+    }
   }
   xhr.withCredentials = !!opts.withCredentials || !!opts.cors
   xhr.send(opts.data)
@@ -107,12 +112,13 @@ function cache (source, obj) {
     cache._ = _
   }
   // Return nothing if no args.
-  if (!arguments.length)
-    return undefined
+  if (!arguments.length) {
+    return
+  }
   // Assign value if provided.
-  if (source && obj)
+  if (source && obj) {
     _[source] = obj
-
+  }
   // Return value on set or get.
   return _[source]
 }
@@ -166,8 +172,11 @@ function requestCached (opts, done) {
  * }
  */
 function requestChain (arr, done, aResults) {
-  var results = !(aResults instanceof Array) ? [] : aResults
+  let results = aResults
 
+  if (!(results instanceof Array)) {
+    results = []
+  }
   if (!arr.length) {
     done(null, results)
     return results
@@ -194,8 +203,9 @@ function requestChain (arr, done, aResults) {
  */
 function requestChainCancel (arr) {
   arr.forEach((x) => {
-    if (x.xhr)
+    if (x.xhr) {
       x.xhr.abort()
+    }
   })
 }
 
@@ -232,8 +242,9 @@ function findNodes (pattern, context) {
  * @returns {Boolean}
  */
 function matchNode (selector, node) {
-  if (node && typeof node.matches == 'function')
+  if (node && typeof node.matches == 'function') {
     return node.matches(selector)
+  }
   return false
 }
 
@@ -247,18 +258,21 @@ function matchNode (selector, node) {
  *
  * @returns {Node}
  */
-function findParentWith (aNode, matcher, aCheckThis) {
-  var node = aNode
-  var checkThis = aCheckThis
+function findParentWith (node, matcher, checkThis) {
   var check = typeof matcher == 'function' ? matcher : matchNode.bind(null, matcher)
 
-  if (arguments.length == 2)
+  if (arguments.length == 2) {
     checkThis = true
+  }
 
-  if (checkThis && check(node)) return node
+  if (checkThis && check(node)) {
+    return node
+  }
   while (node) {
     node = node.parentNode
-    if (check(node)) return node
+    if (check(node)) {
+      return node
+    }
   }
   return undefined
 }
@@ -291,14 +305,18 @@ function cloneNodeAsElement (node, tagname) {
  * @returns {Object}
  */
 function getFromDotString (obj, str) {
-  if (!str) return undefined
+  if (!str) {
+    return undefined
+  }
   var pieces = str.split('.')
   var parent = obj
   var target
 
   for (var i = 0; i < pieces.length; i++) {
     target = parent[pieces[i]]
-    if (!target && i != pieces.length - 1) return undefined
+    if (!target && i != pieces.length - 1) {
+      return undefined
+    }
     parent = target
   }
   return target
@@ -315,7 +333,9 @@ function getFromDotString (obj, str) {
 function getMethod (path, context) {
   var fn = getFromDotString((context || window), path)
 
-  if (typeof fn != 'function') return undefined
+  if (typeof fn != 'function') {
+    return undefined
+  }
   return fn
 }
 
@@ -333,14 +353,13 @@ function dummyMethod () {
  * @arg {Node} parent The node to find children with the attribute.
  */
 function loadNodeSources (parent) {
-  if (!parent)
+  if (!parent) {
     return
-  var nodes = findNodes('[data-source]', parent)
+  }
+  const nodes = findNodes('[data-source]', parent)
 
   for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i]
-
-    loadNodeSource(node)
+    loadNodeSource(nodes[i])
   }
 }
 
@@ -350,39 +369,68 @@ function loadNodeSources (parent) {
  * "data-cors" attribute to enable CORS on request.
  *
  * @arg {Node} node The node to operate on.
- * @arg {Matches} array The matching $ variables in the source that match the
- *                      URL
+ * @arg {Matches} array The matching $ variables in the source that
+ *                      match the URL
  */
 function loadNodeSource (node, aMatches) {
   var matches = aMatches ? aMatches : {}
-  var source = node.getAttribute('data-source')
-  var dataProcess = node.getAttribute('data-process')
-  var process = getMethod(dataProcess) || dummyMethod
+  var source = node.dataset.source
+  var dataProcess = node.dataset.process
+  var process
 
-  process('start', node, null, null, null, matches)
-  if (!source)
+  process = getMethod(dataProcess)
+
+  if (!process && dataProcess) {
+    throw new Error('Process function ' + dataProcess + ' is not defined')
+  }
+  else if (!process) {
+    process = dummyMethod
+  }
+
+  var args = {
+    state: 'start',
+    node: node,
+    matches: matches
+  }
+
+  if (node && node.dataset.template) {
+    args.template = node.dataset.template
+  }
+
+  process(args)
+
+  if (!source) {
     return
-
-  source = source.replace(/\$([\w\.]+)/g, (str, a) => {
+  }
+  //Was this: /\$([\w\.]+)/g
+  //But that broke $newspost/json/$1.json by removing the .json part
+  source = source.replace(/\$([\w]+)/g, (str, a) => {
     var match
 
-    if (!isNaN(parseInt(a)))
+    if (!isNaN(parseInt(a))) {
       match = matches[parseInt(a)]
+    }
 
     if (!match) {
       var x = getFromDotString(window, a)
 
       match = x != undefined ? x.toString() : a
     }
+
     return match
   })
+  var cors = !node.hasAttribute('data-no-cors')
+
   requestCached({
     url: source,
-    cors: !!node.hasAttribute('data-cors'),
+    cors: cors,
     delay: parseInt(node.getAttribute('data-delay'))
   }, (err, body, xhr) => {
-    process('finish', node, err, body, xhr, matches)
-    loadNodeSources(node, matches)
+    args.state = 'finish'
+    args.result = body
+    args.xhr = xhr
+    args.error = err
+    process(args)
   })
 }
 
@@ -404,16 +452,20 @@ function objectToQueryString (obj) {
 /**
  * Converts a query string to an object.
  *
- * @arg {String} str The string to convert an Object.
+ * @arg {String} aStr The string to convert an Object.
  *
  * @returns {Object}
  */
 function queryStringToObject (aStr) {
-  var str = aStr
   var obj = {}
+  var str = aStr
 
-  if (!str) return obj
-  if (str[0] == "?") str = str.substr(1)
+  if (!str) {
+    return obj
+  }
+  if (str[0] == "?") {
+    str = str.substr(1)
+  }
   var arr = str.split("&")
 
   arr.forEach((el) => {
@@ -422,4 +474,14 @@ function queryStringToObject (aStr) {
     obj[decodeURIComponent(a[0])] = decodeURIComponent(a[1])
   })
   return obj
+}
+
+/**
+ * Helper wrapper that gets query string object from
+ * what's in the current url
+ *
+ * @returns {Object}
+ */
+function searchStringToObject () {
+  return queryStringToObject(window.location.search)
 }

@@ -7,8 +7,9 @@
  * @arg {String} title The title of the state.
  */
 function go (url, aState, aTitle) {
-  state = aState || {}
-  title = aTitle || {}
+  const state = aState || {}
+  const title = aTitle || {}
+
   history.pushState(state, title, url)
   changeState(url, state, title)
 }
@@ -22,12 +23,13 @@ function go (url, aState, aTitle) {
  * @arg {String} title The title of the state.
  */
 function changeState (url, state, aTitle) {
-  var title = aTitle
-  var el = readState()
 
-  if (el)
-    title = typeof (title) == 'string' ? title : el.getAttribute('data-title')
+  const el = readState()
+  let title = aTitle
 
+  if (el) {
+    title = typeof (title) == 'string' ? title : el.dataset.title
+  }
   var ev = new CustomEvent("changestate", {
     detail: {
       element: el,
@@ -48,27 +50,21 @@ function readState () {
   var str = location.pathname.substr(1)
   var result = getRouteNode(str)
 
-  if (!result)
-    return undefined
+  if (!result) {
+    const ev = new CustomEvent("routenotfound", {
+      detail: {
+        path: str
+      }
+    })
+
+    window.dispatchEvent(ev)
+    return
+  }
   var node = cloneNodeAsElement(result.node, 'div')
 
   node.innerHTML = result.node.textContent
   loadNodeSource(node, result.matches)
   return node
-}
-
-/**
- * Starts listening to the "popstate" event after page loads and fires initial
- * change state for the page.
- */
-function startState () {
-  function on (e) {
-    changeState(location.pathname + location.search, e.state, '')
-  }
-  document.addEventListener("DOMContentLoaded", (e) => {
-    window.addEventListener("popstate", on)
-    on(e)
-  })
 }
 
 /**
@@ -84,20 +80,21 @@ function getRouteNode (path) {
 
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i]
-    var rx = new RegExp(node.getAttribute('data-route'))
+    var rx = new RegExp(node.dataset.route)
 
-    if (!rx.test(path))
+    if (!rx.test(path)) {
       continue
-
+    }
     matches = path.match(rx)
-    if (!matches)
+    if (!matches) {
       continue
-
+    }
     target = node
     break
   }
-  if (!target)
-    return undefined
+  if (!target) {
+    return
+  }
   return {
     node: target,
     matches: matches
@@ -111,7 +108,9 @@ function getRouteNode (path) {
  * @arg {Event} e The event to create a path on.
  */
 function addEventPath(e) {
-  if (e.path) return
+  if (e.path) {
+    return
+  }
   var arr = []
   var i = e.target
 
@@ -130,11 +129,12 @@ function addEventPath(e) {
  */
 function interceptClick (e) {
   addEventPath(e)
-  if ((e.button != undefined && e.button != 0) || e.metaKey)
+  if ((e.button != undefined && e.button != 0) || e.metaKey) {
     return true
-
-  if (e.ctrlKey)
-    return undefined
+  }
+  if (e.ctrlKey) {
+    return
+  }
   var isAnchor = false
 
   for (var i = 0; i < e.path.length; i++) {
@@ -144,22 +144,28 @@ function interceptClick (e) {
       break
     }
   }
-  if (!isAnchor || !t.hasAttribute("href"))
-    return undefined
-  if (t.hasAttribute("download"))
-    return undefined
+  if (!isAnchor || !t.hasAttribute("href")) {
+    return
+  }
+  if (t.hasAttribute("download")) {
+    return
+  }
   var url = t.getAttribute("href")
 
-  if (!isRelativeUrl(url))
-    return undefined
+  if (!isRelativeUrl(url)) {
+    return
+  }
   e.preventDefault()
   go(url)
-  return undefined
 }
 
 function isRelativeUrl (url) {
-  if (url.indexOf("http") == 0) return false
-  if (url.indexOf("javascript:") == 0) return false
+  if (url.indexOf("http") == 0) {
+    return false
+  }
+  if (url.indexOf("javascript:") == 0) {
+    return false
+  }
   return true
 }
 
