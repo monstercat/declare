@@ -404,9 +404,7 @@ function loadNodeSource (node, aMatches) {
   if (!source) {
     return
   }
-  //Was this: /\$([\w\.]+)/g
-  //But that broke $newspost/json/$1.json by removing the .json part
-  source = source.replace(/\$([\w]+)/g, (str, a) => {
+  source = source.replace(/\$([A-z\.]+[\w\.]*|[\d])/g, (str, a) => {
     var match
 
     if (!isNaN(parseInt(a))) {
