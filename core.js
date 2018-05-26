@@ -93,7 +93,9 @@ function request (opts, done) {
     }
   }
   xhr.withCredentials = !!opts.withCredentials || !!opts.cors
-  xhr.send(opts.data)
+  if (opts.autosend !== false) {
+    xhr.send(opts.data)
+  }
   return xhr
 }
 
