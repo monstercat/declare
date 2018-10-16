@@ -525,7 +525,6 @@ function modelGetUrl(self) {
 /* ROUTE */
 
 const EvRouteChanged = "routechanged"
-const EvLinkCaught   = "linkcaught"
 
 /**
  * Trigger a new history state and dispatch an event.
@@ -573,35 +572,28 @@ function changeRoute(m, path) {
 /**
  * Intercept clicks on the page and dispatch an event. Useful to override page
  * navigation.
- * @param {ClickEvent} e
+ * @param {ClickEvent} ev
  */
-function interceptClick(e) {
-	if ((e.button != undefined && e.button != 0) || e.metaKey) {
-		return true
+function interceptClick(ev) {
+	if ((ev.button != undefined && ev.button != 0) || ev.metaKey) {
+		return undefined
 	}
-	if (e.ctrlKey) {
-		return false
+	if (ev.ctrlKey) {
+		return undefined
 	}
-	const node = findNodeParent(e.target, "A", true)
+	const node = findNodeParent(ev.target, "A", true)
 	const isAnchor = !!node
 	if (!isAnchor ||
 		!node.hasAttribute("href") ||
 		node.hasAttribute("download")) {
-		return
+		return undefined
 	}
 	// Use this intead of node.href to get the actual input string
 	const href = node.getAttribute("href")
 	if (!isRelativeUrl(href)) {
-		return
+		return undefined
 	}
-	e.preventDefault()
-	window.dispatchEvent(new CustomEvent(EvLinkCaught, {
-		detail: {
-			originalEvent: e,
-			node: node,
-			path: href,
-		}
-	}))
+	return node
 }
 
 /**

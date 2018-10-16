@@ -25,43 +25,50 @@
 	routes.set(/^\.\/funky/, goFunky)
 	routes.set(/^\.\/no-funky/, goNoFunky)
 
-	function gRender(view) {
-		let tmpl = Handlebars.compile(view.template)
-		return tmpl(view.getScope())
-	}
-	let m = mkModel({
-		data: {
-			items: ["one", "two", "three"],
-		}
-	})
-	let m2 = mkModel({
-		data: {
-			groot: "groo",
-		},
-	})
+	let m = mkModel({ data: {
+		items: ["one", "two", "three"],
+	} })
+	let m2 = mkModel({ data: {
+		groot: "groo",
+	} })
 
+	let v2
 	let v = mkView({
 		templateName: "list",
 		renderer: gRender,
 	}, findNode("#main"))
-	v.viewId = 'v1'
 	v.bind("m", m)
 	v.bind("m2", m2)
-
 	v.render()
+
+	setTimeout(() => {
+		const changed = changeRoute(routes, "./funky")
+		console.log("changed route?", changed)
+	}, 1000)
+
+	window.addEventListener("click", (ev) => {
+		let node
+		if (node = interceptClick(ev)) {
+			changeRoute(routes, node.getAttribute("href"))
+		}
+	})
+
+	function gRender(view) {
+		let tmpl = Handlebars.compile(view.template)
+		return tmpl(view.getScope())
+	}
 
 	function doStuff(ev, el) {
 		m.set({items: [1, 2, 3]})
 	}
 
-	function doToot(ev, el) {
+	function doGroot(ev, el) {
 		m2.set({groot: "Groot"})
 	}
 
-	let v2
 	function goFunky(matches) {
 		v2 = mkView({
-			template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doToot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
+			template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doGroot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
 			renderer: gRender,
 		})
 		v2.viewId = 'v2'
@@ -74,15 +81,5 @@
 		console.log("NO FUNKY!")
 		v.remove("#pulp", v2)
 	}
-
-	setTimeout(() => {
-		const changed = changeRoute(routes, "./funky")
-		console.log("changed route?", changed)
-	}, 1000)
-
-	window.addEventListener("click", interceptClick)
-	window.addEventListener(EvLinkCaught, (ev) => {
-		changeRoute(routes, ev.detail.path)
-	})
 </script>
 </html>
