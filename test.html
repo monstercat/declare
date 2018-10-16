@@ -21,65 +21,65 @@
 <div id="pulp"></div>
 </script>
 <script type="text/javascript">
-	const routes = new Map()
-	routes.set(/^\.\/funky/, goFunky)
-	routes.set(/^\.\/no-funky/, goNoFunky)
+const routes = new Map()
+routes.set(/^\.\/funky/, goFunky)
+routes.set(/^\.\/no-funky/, goNoFunky)
 
-	let m = mkModel({ data: {
-		items: ["one", "two", "three"],
-	} })
-	let m2 = mkModel({ data: {
-		groot: "groo",
-	} })
+let m = mkModel({ data: {
+	items: ["one", "two", "three"],
+} })
+let m2 = mkModel({ data: {
+	groot: "groo",
+} })
 
-	let v2
-	let v = mkView({
-		templateName: "list",
+let v2
+let v = mkView({
+	templateName: "list",
+	renderer: gRender,
+}, findNode("#main"))
+v.bind("m", m)
+v.bind("m2", m2)
+v.render()
+
+setTimeout(() => {
+	const changed = changeRoute(routes, "./funky")
+	console.log("changed route?", changed)
+}, 1000)
+
+window.addEventListener("click", (ev) => {
+	let node
+	if (node = interceptClick(ev)) {
+		ev.preventDefault()
+		changeRoute(routes, node.getAttribute("href"))
+	}
+})
+
+function gRender(view) {
+	let tmpl = Handlebars.compile(view.template)
+	return tmpl(view.getScope())
+}
+
+function doStuff(ev, el) {
+	m.set({items: [1, 2, 3]})
+}
+
+function doGroot(ev, el) {
+	m2.set({groot: "Groot"})
+}
+
+function goFunky(matches) {
+	v2 = mkView({
+		template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doGroot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
 		renderer: gRender,
-	}, findNode("#main"))
-	v.bind("m", m)
-	v.bind("m2", m2)
-	v.render()
-
-	setTimeout(() => {
-		const changed = changeRoute(routes, "./funky")
-		console.log("changed route?", changed)
-	}, 1000)
-
-	window.addEventListener("click", (ev) => {
-		let node
-		if (node = interceptClick(ev)) {
-			changeRoute(routes, node.getAttribute("href"))
-		}
 	})
+	v2.bind("m2", m2)
+	v2.render()
+	v.add("#pulp", v2)
+}
 
-	function gRender(view) {
-		let tmpl = Handlebars.compile(view.template)
-		return tmpl(view.getScope())
-	}
-
-	function doStuff(ev, el) {
-		m.set({items: [1, 2, 3]})
-	}
-
-	function doGroot(ev, el) {
-		m2.set({groot: "Groot"})
-	}
-
-	function goFunky(matches) {
-		v2 = mkView({
-			template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doGroot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
-			renderer: gRender,
-		})
-		v2.viewId = 'v2'
-		v2.bind("m2", m2)
-		v2.render()
-		v.add("#pulp", v2)
-	}
-
-	function goNoFunky(matches) {
-		console.log("NO FUNKY!")
-		v.remove("#pulp", v2)
-	}
+function goNoFunky(matches) {
+	console.log("NO FUNKY!")
+	v.remove("#pulp", v2)
+}
 </script>
 </html>

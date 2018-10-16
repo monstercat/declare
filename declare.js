@@ -452,6 +452,7 @@ function modelFetch(self, fn) {
 		self.dispatchEvent(ev)
 		fn(err, body, xhr)
 	})
+	return self.xhrFetch
 }
 
 /**
@@ -462,7 +463,7 @@ function modelFetch(self, fn) {
  */
 function modelSave(self, method, fn) {
 	this.dispatchEvent(new CustomEvent(EvModelSave))
-	request({
+	return request({
 		url: self.getUrl(),
 		method: method,
 		cors: self.cors,
