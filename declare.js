@@ -17,15 +17,15 @@ const EvModelSaved   = "modelsaved"
  */
 
 /**
- * @param {Object} opts
- * @param {string} opts.url The resource to hit, required
- * @param {?string} opts.method The HTTP method to use
- * @param {?Object.<string, string>} opts.headers An object of HTTP headers
- * @param {?boolean} opts.cors Enable CORS on the request
- * @param {?boolean} opts.withCredentials Same as opts.cors
- * @param {?boolean} opts.autoSend Sends request immediately, default true
- * @param {?*} opts.data
- * @param {?int} opts.delay
+ * @param {string|Object} opts Options or URL
+ * @param {string} opts.url
+ * @param {string} [opts.method] HTTP method
+ * @param {Object.<string, string>} [opts.headers] HTTP headers
+ * @param {boolean} [opts.cors] Cross origin
+ * @param {boolean} [opts.withCredentials] Same as opts.cors
+ * @param {boolean} [opts.autoSend = true] Send now
+ * @param {*} [opts.data]
+ * @param {int} [opts.delay]
  * @param {requestCallback} done
  * @returns {XMLHttpRequest}
  */
@@ -164,12 +164,12 @@ function findParent(node, matcher, checkThis) {
 
 /**
  * @param {string} selector
- * @param {HTMLElement} node
+ * @param {HTMLElement} el
  * @returns {boolean}
  */
-function matchElement(selector, node) {
-	if (node && typeof node.matches === 'function') {
-		return node.matches(selector)
+function matchElement(selector, el) {
+	if (el && typeof el.matches === 'function') {
+		return el.matches(selector)
 	}
 	return false
 }
@@ -295,14 +295,16 @@ function viewBind(self, key, model) {
 
 /**
  * @param {View} self
+ * @param {string} key
  * @param {Model} model
  */
-function viewUnbind(self, model) {
+function viewUnbind(self, key, model) {
 	if (!model) {
 		return
 	}
 	model.removeEventListener(EvModelError, self.render)
 	model.removeEventListener(EvModelChanged, self.render)
+	self.models.delete(key)
 }
 
 /**
@@ -523,7 +525,7 @@ function modelSet(self, obj) {
 /**
  * Returns the value found on the models data property using a dot path.
  * @param {Model} self
- * @param {string} path
+ * @param {string} [path]
  * @returns {*}
  */
 function modelGet(self, path) {
