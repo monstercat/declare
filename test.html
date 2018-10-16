@@ -1,52 +1,88 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<script type="text/javascript" src="./core.js"></script>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.js" type="text/javascript"></script>
+    <script src="./declare.js" type="text/javascript"></script>
 </head>
 <body>
-<script type="text/javascript">
-console.log('Running Tests')
-
-function testRequestChain (done) {
-	requestChain([
-		{ url: "https://raw.githubusercontent.com/monstercat/docs/master/README.md" },
-		{ url: "https://raw.githubusercontent.com/monstercat/docs/master/bounties.md" }
-	], (err, results)=> {
-		if (err)
-			return done(err)
-		done()
-	})
-}
-
-function testRequestChainFail (done) {
-	requestChain([
-		{ url: "https://raw.githubusercontent.com/monstercat/docs/master/README.md" },
-		{ url: "https://raw.githubusercontent.com/monstercat/docs/master/404.md" }
-	], (err, results)=> {
-		if (err)
-			return done()
-		done(Error("It should have errored out."))
-	})
-}
-
-function testRequestDelay (done) {
-	var spec = 1000
-	var time = (new Date).getTime()
-	request({
-		url: "https://raw.githubusercontent.com/monstercat/docs/master/404.md",
-		delay: spec
-	}, (err, body, xhr)=> {
-		var delta = (new Date()).getTime() - time
-		if (delta >= spec)
-			return done()
-		return done(Error('Delay did not last specification.'))
-	})
-}
-
-testRequestChain((err)=> console.log("testRequestChain: ", err || "succeeded"))
-testRequestChainFail((err)=> console.log("testRequestChainFail: ", err || "succeeded"))
-testRequestDelay((err)=> console.log("testRequestDelay: ", err || "succeeded"))
-
-</script>
+<h1>Welcome to Declare WebJS library!</h1>
+<div id="main"></div>
 </body>
+<script type="text/html" data-template="list">
+<p>My name is {{m2.groot}}.</p>
+<ul>
+    {{#m.items}}
+    <li>{{.}}</li>
+    {{/m.items}}
+</ul>
+<button onclick="doStuff(event, this)">Change</button>
+<div id="pulp"></div>
+</script>
+<script type="text/javascript">
+	const routes = new Map()
+	routes.set(/^\.\/funky/, goFunky)
+	routes.set(/^\.\/no-funky/, goNoFunky)
+
+	function gRender(view) {
+		let tmpl = Handlebars.compile(view.template)
+		return tmpl(view.getScope())
+	}
+	let m = mkModel({
+		data: {
+			items: ["one", "two", "three"],
+		}
+	})
+	let m2 = mkModel({
+		data: {
+			groot: "groo",
+		},
+	})
+
+	let v = mkView({
+		templateName: "list",
+		renderer: gRender,
+	}, findNode("#main"))
+	v.viewId = 'v1'
+	v.bind("m", m)
+	v.bind("m2", m2)
+
+	v.render()
+
+	function doStuff(ev, el) {
+		m.set({items: [1, 2, 3]})
+	}
+
+	function doToot(ev, el) {
+		m2.set({groot: "Groot"})
+	}
+
+	let v2
+	function goFunky(matches) {
+		v2 = mkView({
+			template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doToot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
+			renderer: gRender,
+		})
+		v2.viewId = 'v2'
+		v2.bind("m2", m2)
+		v2.render()
+		v.add("#pulp", v2)
+	}
+
+	function goNoFunky(matches) {
+		console.log("NO FUNKY!")
+		v.remove("#pulp", v2)
+	}
+
+	setTimeout(() => {
+		const changed = changeRoute(routes, "./funky")
+		console.log("changed route?", changed)
+	}, 1000)
+
+	window.addEventListener("click", interceptClick)
+	window.addEventListener(EvLinkCaught, (ev) => {
+		changeRoute(routes, ev.detail.path)
+	})
+</script>
 </html>
