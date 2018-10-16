@@ -6,16 +6,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.12/handlebars.js" type="text/javascript"></script>
     <script src="./declare.js" type="text/javascript"></script>
 </head>
-<body>
-<h1>Welcome to Declare WebJS library!</h1>
-<div id="main"></div>
-</body>
+    <body>
+        <h1>Welcome to Declare WebJS library!</h1>
+        <div id="main"></div>
+    </body>
+</html>
 <script type="text/html" data-template="list">
-<p>My name is {{m2.groot}}.</p>
+<p>My name is {{m2.data.groot}}.</p>
 <ul>
-    {{#m.items}}
+    {{#m.data.items}}
     <li>{{.}}</li>
-    {{/m.items}}
+    {{/m.data.items}}
 </ul>
 <button onclick="doStuff(event, this)">Change</button>
 <div id="pulp"></div>
@@ -36,7 +37,7 @@ let v2
 let v = mkView({
 	templateName: "list",
 	renderer: gRender,
-}, findNode("#main"))
+}, findOne("#main"))
 v.bind("m", m)
 v.bind("m2", m2)
 v.render()
@@ -54,7 +55,7 @@ window.addEventListener("click", (ev) => {
 	}
 })
 
-function gRender(view) {
+function gRender(ev, view) {
 	let tmpl = Handlebars.compile(view.template)
 	return tmpl(view.getScope())
 }
@@ -69,7 +70,7 @@ function doGroot(ev, el) {
 
 function goFunky(matches) {
 	v2 = mkView({
-		template: `<span id='groot'>I am {{m2.groot}}!</span><button onclick='doGroot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
+		template: `<span id='groot'>I am {{m2.data.groot}}!</span><button onclick='doGroot(event, this)'>Groot</button><p><a href="./no-funky">No funky</a></p>`,
 		renderer: gRender,
 	})
 	v2.bind("m2", m2)
@@ -82,4 +83,3 @@ function goNoFunky(matches) {
 	v.remove("#pulp", v2)
 }
 </script>
-</html>

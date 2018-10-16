@@ -1,30 +1,38 @@
+
+const EvRouteChanged = "routechanged"
+const EvViewRender   = "viewrender"
+const EvViewRendered = "viewrendered"
+const EvModelChanged = "modelchanged"
+const EvModelError   = "modelerror"
+const EvModelFetch   = "modelfetch"
+const EvModelFetched = "modelfetched"
+const EvModelSave    = "modelsave"
+const EvModelSaved   = "modelsaved"
+
 /**
- * This is the callback for request method.
- *
  * @callback requestCallback
  * @param {Error} err An error if any occurred.
- * @param {String} text The response body of the XHR request.
+ * @param {string} text The response body of the XHR request.
  * @param {XMLHttpRequest} xhr The XHR object used.
  */
 
 /**
- * A simple XMLHttpRequest wrapper method.
- *
  * @param {Object} opts
- * @param {String} opts.url The resource to hit, required
- * @param {String} opts.method The HTTP method to use
- * @param {Object} opts.headers An object of HTTP headers
- * @param {Boolean} opts.cors Enable CORS on the request
- * @param {Boolean} opts.withCredentials Same as opts.cors
- * @param {Boolean} opts.autosend Sends request immediately, default true
+ * @param {string} opts.url The resource to hit, required
+ * @param {?string} opts.method The HTTP method to use
+ * @param {?Object.<string, string>} opts.headers An object of HTTP headers
+ * @param {?boolean} opts.cors Enable CORS on the request
+ * @param {?boolean} opts.withCredentials Same as opts.cors
+ * @param {?boolean} opts.autoSend Sends request immediately, default true
+ * @param {?*} opts.data
+ * @param {?int} opts.delay
  * @param {requestCallback} done
- *
  * @returns {XMLHttpRequest}
  */
 function request(opts, done) {
 	if (typeof opts.url !== "string") {
 		console.warn("Request URL not provided.")
-		return done(Error("URL not provided."))
+		return done(Error("URL not provided."), "", null)
 	}
 	let delay = opts.delay || 0
 	let start = Date.now()
@@ -55,14 +63,13 @@ function request(opts, done) {
 		opts.data = JSON.stringify(opts.data)
 	}
 
-	var xhr = new XMLHttpRequest()
-
+	let xhr = new XMLHttpRequest()
 	xhr.onreadystatechange = function onReadyStateChange() {
 		if (xhr.readyState !== XMLHttpRequest.DONE) {
 			return
 		}
-		var obj, err
-		var responseContentType = xhr.getResponseHeader("Content-Type")
+		let obj, err
+		let responseContentType = xhr.getResponseHeader("Content-Type")
 
 		if (responseContentType && responseContentType.indexOf('application/json') >= 0) {
 			try {
@@ -89,63 +96,57 @@ function request(opts, done) {
 	}
 	xhr.open(opts.method || "GET", opts.url)
 	if (typeof opts.headers === "object") {
-		for (let key in opts.headers) {
+		Object.keys(opts.headers).forEach(key => {
 			xhr.setRequestHeader(key, opts.headers[key])
-		}
+		})
 	}
 	xhr.withCredentials = !!opts.withCredentials || !!opts.cors
-	if (opts.autosend !== false) {
+	if (opts.autoSend !== false) {
 		xhr.send(opts.data)
 	}
 	return xhr
 }
 
 /**
- * Finds a node by template name.
- *
- * @param name
+ * Finds a node by template name using data-template attribute.
+ * @param {string} name
  * @returns {HTMLElement}
  */
 function findTemplate(name) {
-	return findNode(`[data-template="${name}"]`)
+	return findOne(`[data-template="${name}"]`)
 }
 
 /**
  * Wrapper for querySelector.
  *
- * @arg {String} pattern The CSS string pattern.
- * @arg {Node} context The context to query on.
+ * @param {string} pattern The CSS string pattern.
+ * @param {Node} [context] The context to query on.
  */
-function findNode(pattern, context) {
+function findOne(pattern, context) {
 	return (context || document).querySelector(pattern)
 }
 
 /**
  * Wrapper for querySelectorAll.
  *
- * @arg {String} pattern The CSS string pattern.
- * @arg {Node} context The context to query on.
- *
- * @returns {Node[]}
+ * @param {string} pattern The CSS string pattern.
+ * @param {Node} [context] The context to query on.
+ * @returns {Array.<Node>}
  */
-function findNodes(pattern, context) {
-	return Array.prototype.slice
-		.call((context || document)
-			.querySelectorAll(pattern))
+function findAll(pattern, context) {
+	Array.from((context || document).querySelectorAll(pattern))
 }
 
 /**
  * Finds an element in the tree from the desired depth point that matches the
- * given CSS selector or function check
- *
- * @arg {Node} node - The child node to start at.
- * @arg {String|Function} matcher - The CSS selector or function to match with.
- * @arg {Bool} checkThis - Also check the initial node.
- *
+ * given CSS selector or function check.
+ * @param {Node} node
+ * @param {string|Function} matcher CSS selector or custom function
+ * @param {boolean} [checkThis]
  * @returns {Node}
  */
-function findNodeParent(node, matcher, checkThis) {
-	let check = typeof matcher === 'function' ? matcher : matchNode.bind(null, matcher)
+function findParent(node, matcher, checkThis) {
+	let check = typeof matcher === 'function' ? matcher : matchElement.bind(null, matcher)
 	if (arguments.length === 2) {
 		checkThis = true
 	}
@@ -162,14 +163,11 @@ function findNodeParent(node, matcher, checkThis) {
 }
 
 /**
- * Stub for node.matches
- *
- * @arg {String} selector - The selector to match with
- * @arg {Node} node - The node to do the selector match on
- *
- * @returns {Boolean}
+ * @param {string} selector
+ * @param {HTMLElement} node
+ * @returns {boolean}
  */
-function matchNode(selector, node) {
+function matchElement(selector, node) {
 	if (node && typeof node.matches === 'function') {
 		return node.matches(selector)
 	}
@@ -177,68 +175,32 @@ function matchNode(selector, node) {
 }
 
 /**
- * Creates a new element and copies the attributes of the provided node.
- *
- * @arg {Node} node The node to copy attributes from.
- * @arg {String} tagname The tagname to use.
- *
- * @returns {Element}
- */
-function cloneNodeAsElement(node, tagname) {
-	let el = document.createElement(tagname)
-	for (let i = 0; i < node.attributes.length; i++) {
-		let o = node.attributes[i]
-		el.setAttribute(o.name, o.value)
-	}
-	return el
-}
-
-/**
- * Gets the value from an object using a dot string syntax.
- *
- * @arg {Object} obj The Object to query.
- * @arg {String} str The dot string path.
- *
+ * Gets the value from an object using target dot string syntax.
+ * Example of dot string syntax: "address.street"
+ * @param {*} target
+ * @param {string} dotPath
  * @returns {*}
  */
-function getFromDotString(obj, str) {
-	if (!str || typeof str !== 'string') {
+function dotGet(target, dotPath) {
+	if (!dotPath || typeof dotPath !== 'string') {
 		return undefined
 	}
-	let pieces = str.split('.')
-	let parent = obj
-	let target
-	for (var i = 0; i < pieces.length; i++) {
-		target = parent[pieces[i]]
-		if (!target && i !== pieces.length - 1) {
+	let pieces = dotPath.split('.')
+	let parent = target
+	let value
+	for (let i = 0; i < pieces.length; i++) {
+		value = parent[pieces[i]]
+		if (!value && i !== pieces.length - 1) {
 			return undefined
 		}
-		parent = target
+		parent = value
 	}
-	return target
+	return value
 }
 
 /**
- * Gets a valid function from the context.
- *
- * @arg {String} path The dot string query to use.
- * @arg {Object} context The context object to query.
- *
- * @returns {Function}
- */
-function getMethod(path, context) {
-	const fn = getFromDotString((context || window), path)
-	if (typeof fn !== 'function') {
-		return undefined
-	}
-	return fn
-}
-
-/**
- * Helper wrapper that gets query string object from
- * what's in the current url
- *
- * @returns {Object}
+ * Get the window's location URLSearchParameters.
+ * @returns {URLSearchParams}
  */
 function searchStringToObject() {
 	return new URLSearchParams(window.location.search)
@@ -246,41 +208,55 @@ function searchStringToObject() {
 
 /**
  * Generate a new UUID v4 string.
- * @return {String}
+ * @returns {string}
  */
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
 
-/* VIEW */
-
-const EvViewRender   = "viewrender"
-const EvViewRendered = "viewrendered"
+/**
+ * @typedef {HTMLElement} View
+ * @property {Map.<string, Model>} models
+ * @property {Map.<string, View>} views
+ * @property {string} template
+ * @property {Function} bind
+ * @property {Function} unbind
+ * @property {Function} add
+ * @property {Function} remove
+ * @property {Function} attachViews
+ * @property {Function} detachViews
+ * @property {Function} render
+ * @property {Function} renderer
+ * @property {Function} getScope
+ */
 
 /**
- * @params {HTMLElement} node
- * @params {Object} opts
+ * @param {Object} opts
+ * @param {*} [node]
+ * @returns {View}
  */
 function mkView(opts, node) {
 	if (node === undefined) {
 		node = document.createElement("div")
 	}
-	node.viewId      = uuidv4()
-	node.models      = new Map()
-	node.views       = new Map()
-	node.bind        = (opts.bind || viewBind).bind(undefined, node)
-	node.unbind      = (opts.unbind || viewUnbind).bind(undefined, node)
-	node.add         = viewAdd.bind(undefined, node)
-	node.remove      = viewRemove.bind(undefined, node)
+	if (!node.viewId || typeof node.viewId !== "string") {
+		node.viewId = uuidv4()
+	}
+	node.models = new Map()
+	node.views = new Map()
+	node.bind = (opts.bind || viewBind).bind(undefined, node)
+	node.unbind = (opts.unbind || viewUnbind).bind(undefined, node)
+	node.add = viewAdd.bind(undefined, node)
+	node.remove = viewRemove.bind(undefined, node)
 	node.attachViews = viewAttachViews.bind(undefined, node)
 	node.detachViews = viewDetachViews.bind(undefined, node)
-	node.render      = viewRender.bind(undefined, node)
-	node.renderer    = opts.renderer || viewGlobalRender
-	node.getScope    = viewGetScope.bind(undefined, node)
-	node.template    = opts.template
+	node.render = viewRender.bind(undefined, node)
+	node.renderer = opts.renderer || viewDefaultRenderer
+	node.getScope = viewGetScope.bind(undefined, node)
+	node.template = opts.template
 	if (opts.templateName) {
 		let n = findTemplate(opts.templateName)
 		if (n) {
@@ -292,15 +268,24 @@ function mkView(opts, node) {
 	return node
 }
 
+/**
+ * @param {View} self
+ * @returns {Object.<string, Model>}
+ */
 function viewGetScope(self) {
 	const m = {}
 	const keys = self.models.keys()
 	for (let key of keys) {
-		m[key] = self.models.get(key).data
+		m[key] = self.models.get(key)
 	}
 	return m
 }
 
+/**
+ * @param {View} self
+ * @param {string} key
+ * @param {Model} model
+ */
 function viewBind(self, key, model) {
 	viewUnbind(self, self.models[key])
 	self.models.set(key, model)
@@ -308,6 +293,10 @@ function viewBind(self, key, model) {
 	model.addEventListener(EvModelChanged, self.render)
 }
 
+/**
+ * @param {View} self
+ * @param {Model} model
+ */
 function viewUnbind(self, model) {
 	if (!model) {
 		return
@@ -316,13 +305,23 @@ function viewUnbind(self, model) {
 	model.removeEventListener(EvModelChanged, self.render)
 }
 
+/**
+ * @param {View} self
+ * @param {string} sel
+ * @param {View} view
+ */
 function viewAdd(self, sel, view) {
 	const arr = self.views.get(sel) || []
 	arr.push(view)
 	self.views.set(sel, arr)
-	findNode(sel, self).appendChild(view)
+	findOne(sel, self).appendChild(view)
 }
 
+/**
+ * @param {View} self
+ * @param {string} sel
+ * @param {View} view
+ */
 function viewRemove(self, sel, view) {
 	const arr = self.views.get(sel)
 	if (!Array.isArray(arr)) {
@@ -335,15 +334,15 @@ function viewRemove(self, sel, view) {
 		index = arr.indexOf(view)
 	}
 	self.views.set(sel, arr)
-	const parent = findNode(sel, self)
-	if (parent == view.parentElement) {
+	const parent = findOne(sel, self)
+	if (parent === view.parentElement) {
 		parent.removeChild(view)
 	}
 }
 
 /**
  * Removes all views from their parents.
- * @param self
+ * @param {View} self
  */
 function viewDetachViews(self) {
 	for (let arr of self.views) {
@@ -357,12 +356,12 @@ function viewDetachViews(self) {
 
 /**
  * Appends all target selector children views back to the tree.
- * @param self
+ * @param {View} self
  */
 function viewAttachViews(self) {
 	const keys = self.views.keys()
 	for (let key of keys) {
-		const root = findNode(key, self)
+		const root = findOne(key, self)
 		const arr = self.views.get(key)
 		arr.forEach(view => {
 			root.appendChild(view)
@@ -370,6 +369,11 @@ function viewAttachViews(self) {
 	}
 }
 
+/**
+ * Detaches views, renders, reattaches views, and triggers events.
+ * @param {View} self
+ * @param {Event} ev
+ */
 function viewRender(self, ev) {
 	//console.log(`${Date.now()} view ${self.viewId} rendering`)
 	if (typeof self.template !== "string") {
@@ -379,7 +383,7 @@ function viewRender(self, ev) {
 	self.detachViews()
 	let html = ""
 	try {
-		html = self.renderer(self)
+		html = self.renderer(ev, self)
 	} catch (e) {
 		console.warn(e)
 		html = e
@@ -389,53 +393,68 @@ function viewRender(self, ev) {
 	self.dispatchEvent(new CustomEvent(EvViewRendered))
 }
 
-function viewGlobalRender(view) {
+/**
+ * Default renderer stub. Does nothing.
+ * @param {View} view
+ * @returns {string}
+ */
+function viewDefaultRenderer(view) {
 	console.warn("Please define your own rendering.")
 	return "No renderer provided."
 }
 
-/* MODEL */
-
-const EvModelChanged = "modelchanged"
-const EvModelError   = "modelerror"
-const EvModelFetch   = "modelfetch"
-const EvModelFetched = "modelfetched"
-const EvModelSave    = "modelsave"
-const EvModelSaved   = "modelsaved"
+/**
+ * @typedef {EventTarget} Model
+ * @property {string} url
+ * @property {Object} data
+ * @property {XMLHttpRequest} xhrFetch
+ * @property {XMLHttpRequest} xhrSave
+ * @property {Function} fetch
+ * @property {Function} save
+ * @property {Function} set
+ * @property {Function} get
+ * @property {Function} getUrl
+ */
 
 /**
- * Makes a model from the provided EventTarget.
- * @params {EventTarget} node
- * @params {Object} opts
+ * Makes a model from the provided target.
+ * @param {Object} opts
+ * @param {*} [target]
+ * @returns {Model}
  */
-function mkModel(opts, node) {
-	if (node === undefined) {
-		node = document.createElement("div")
+function mkModel(opts, target) {
+	if (target === undefined) {
+		target = document.createElement("div")
 	}
-	node.url        = opts.url || ""
-	node.fetch      = (opts.fetch || modelFetch).bind(undefined, node)
-	node.save       = (opts.save || modelSave).bind(undefined, node, "POST")
-	node.set        = (opts.set || modelSet).bind(undefined, node)
-	node.get        = (opts.get || modelGet).bind(undefined, node)
-	node.getUrl     = (opts.getUrl || modelGetUrl).bind(undefined, node)
-	node.cors       = !!opts.cors || false
-	node.data       = opts.data || {}
-	return node
+	target.url = opts.url || ""
+	target.fetch = (opts.fetch || modelFetch).bind(undefined, target, {
+		cors: opts.cors,
+	})
+	target.save = (opts.save || modelSave).bind(undefined, target, {
+		cors: opts.cors,
+		method: opts.method,
+	})
+	target.set = (opts.set || modelSet).bind(undefined, target)
+	target.get = (opts.get || modelGet).bind(undefined, target)
+	target.getUrl = (opts.getUrl || modelGetUrl).bind(undefined, target)
+	target.data = opts.data || {}
+	return target
 }
 
 /**
  * Fetches data from the server and updates the model.
- * @param self
+ * @param {Model} self
+ * @param {Object} opts
  * @param {Function} fn
  */
-function modelFetch(self, fn) {
+function modelFetch(self, opts, fn) {
 	if (self.xhrFetch) {
 		self.xhrFetch.abort()
 	}
 	self.dispatchEvent(new CustomEvent(EvModelFetch))
 	self.xhrFetch = request({
 		url: self.getUrl(),
-		cors: self.cors,
+		cors: opts.cors,
 	}, (err, body, xhr) => {
 		let ev
 		let detail = { detail: {
@@ -457,16 +476,16 @@ function modelFetch(self, fn) {
 
 /**
  * Makes a request to the server to save data.
- * @param {Object} self
- * @param {String} method
+ * @param {Model} self
+ * @param {Object} opts
  * @param {Function} fn
  */
-function modelSave(self, method, fn) {
+function modelSave(self, opts, fn) {
 	this.dispatchEvent(new CustomEvent(EvModelSave))
 	return request({
 		url: self.getUrl(),
-		method: method,
-		cors: self.cors,
+		method: opts.method || "POST",
+		cors: opts.cors,
 		data: self.data,
 	}, (err, body, xhr) => {
 		let ev
@@ -488,7 +507,7 @@ function modelSave(self, method, fn) {
 
 /**
  * Sets a new data object for the model and dispatches an event.
- * @param self
+ * @param {Model} self
  * @param {Object} obj
  */
 function modelSet(self, obj) {
@@ -502,36 +521,32 @@ function modelSet(self, obj) {
 }
 
 /**
- * Returns the value found on the models data property by the dot path.
- * @param self
- * @param {String} path
+ * Returns the value found on the models data property using a dot path.
+ * @param {Model} self
+ * @param {string} path
  * @returns {*}
  */
 function modelGet(self, path) {
 	if (!path) {
 		return self.data
 	}
-	return getFromDotString(self.data, path)
+	return dotGet(self.data, path)
 }
 
 /**
  * The default way to grab the model's resource url
- * @param self
- * @returns {String}
+ * @param {Model} self
+ * @returns {string}
  */
 function modelGetUrl(self) {
 	return self.url
 }
 
-/* ROUTE */
-
-const EvRouteChanged = "routechanged"
-
 /**
  * Trigger a new history state and dispatch an event.
- * @param {String} url
+ * @param {string} url
  * @param {Object} state
- * @param {String} title
+ * @param {string} title
  */
 function go(url, state = {}, title = "") {
 	history.pushState(state, title, url)
@@ -546,8 +561,9 @@ function go(url, state = {}, title = "") {
 
 /**
  * Execute a function in the map based on the path match.
- * @param {Map<RegExp, Function>} m
- * @param {String}
+ * @param {Map.<RegExp, Function>} m
+ * @param {string} path
+ * @returns {boolean}
  */
 function changeRoute(m, path) {
 	const matchers = m.keys()
@@ -572,24 +588,25 @@ function changeRoute(m, path) {
 
 /**
  * Intercept clicks on the page and dispatch an event. Useful to override page
- * navigation.
- * @param {ClickEvent} ev
+ * navigation. Returns undefined if not intercepted.
+ * @param {MouseEvent} ev
+ * @returns {Node}
  */
 function interceptClick(ev) {
-	if ((ev.button != undefined && ev.button != 0) || ev.metaKey) {
+	if ((ev.button !== undefined && ev.button !== 0) || ev.metaKey) {
 		return undefined
 	}
 	if (ev.ctrlKey) {
 		return undefined
 	}
-	const node = findNodeParent(ev.target, "A", true)
+	const node = findParent(ev.target, "A", true)
 	const isAnchor = !!node
 	if (!isAnchor ||
 		!node.hasAttribute("href") ||
 		node.hasAttribute("download")) {
 		return undefined
 	}
-	// Use this intead of node.href to get the actual input string
+	// Use this instead of node.href to get the actual input string
 	const href = node.getAttribute("href")
 	if (!isRelativeUrl(href)) {
 		return undefined
@@ -598,12 +615,9 @@ function interceptClick(ev) {
 }
 
 /**
- * @param {String} url
+ * @param {string} url
+ * @returns {boolean}
  */
 function isRelativeUrl(url) {
-	if (url.indexOf("http") == 0 ||
-		url.indexOf("javascript:") == 0) {
-		return false
-	}
-	return true
+	return !(url.indexOf("http") === 0 || url.indexOf("javascript:") === 0)
 }
