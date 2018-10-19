@@ -1,13 +1,16 @@
 
-const EvRouteChanged = "routechanged"
-const EvViewRender   = "viewrender"
-const EvViewRendered = "viewrendered"
 const EvModelChanged = "modelchanged"
 const EvModelError   = "modelerror"
-const EvModelFetch   = "modelfetch"
+const EvModelRequest = "modelrequest"
 const EvModelFetched = "modelfetched"
-const EvModelSave    = "modelsave"
 const EvModelSaved   = "modelsaved"
+const EvStatePop     = "popstate"
+const EvStatePush    = "pushstate"
+const EvViewRender   = "viewrender"
+const EvViewRendered = "viewrendered"
+
+const ModelSave = "modelsave"
+const ModelFetch = "modelfetch"
 
 /**
  * @callback requestCallback
@@ -87,7 +90,7 @@ function request(opts, done) {
 		}
 		err = Error("A connection error occurred.")
 		if (typeof obj === 'object' && typeof obj.message !== 'undefined') {
-			err.message = obj.message
+			Object.assign(err, obj)
 		}
 		else if (typeof obj !== 'undefined' && !!xhr.responseText) {
 			err.message = xhr.responseText
@@ -134,7 +137,7 @@ function findOne(pattern, context) {
  * @returns {Array.<Node>}
  */
 function findAll(pattern, context) {
-	Array.from((context || document).querySelectorAll(pattern))
+	return Array.from((context || document).querySelectorAll(pattern))
 }
 
 /**
@@ -199,10 +202,10 @@ function dotGet(target, dotPath) {
 }
 
 /**
- * Get the window's location URLSearchParameters.
+ * Get the window's location URLSearchParams.
  * @returns {URLSearchParams}
  */
-function searchStringToObject() {
+function getSearchParams() {
 	return new URLSearchParams(window.location.search)
 }
 
@@ -221,7 +224,6 @@ function uuidv4() {
  * @typedef {HTMLElement} View
  * @property {Map.<string, Model>} models
  * @property {Map.<string, View>} views
- * @property {string} template
  * @property {Function} bind
  * @property {Function} unbind
  * @property {Function} add
@@ -241,6 +243,9 @@ function uuidv4() {
 function mkView(opts, node) {
 	if (node === undefined) {
 		node = document.createElement("div")
+	} else if (!node) {
+		throw Error("Provided node is invalid.")
+		return
 	}
 	if (!node.viewId || typeof node.viewId !== "string") {
 		node.viewId = uuidv4()
@@ -256,15 +261,6 @@ function mkView(opts, node) {
 	node.render = viewRender.bind(undefined, node)
 	node.renderer = opts.renderer || viewDefaultRenderer
 	node.getScope = viewGetScope.bind(undefined, node)
-	node.template = opts.template
-	if (opts.templateName) {
-		let n = findTemplate(opts.templateName)
-		if (n) {
-			node.template = n.textContent
-		}
-	} else if (typeof node.template !== "string") {
-		node.template = node.innerHTML
-	}
 	return node
 }
 
@@ -285,12 +281,17 @@ function viewGetScope(self) {
  * @param {View} self
  * @param {string} key
  * @param {Model} model
+ * @param {string[]} events
  */
-function viewBind(self, key, model) {
-	viewUnbind(self, self.models[key])
+function viewBind(self, key, model, events=[]) {
+	if (events.length == 0) {
+		events.push(EvModelChanged, EvModelError, EvModelRequest)
+	}
+	viewUnbind(self, key, model, events)
 	self.models.set(key, model)
-	model.addEventListener(EvModelError, self.render)
-	model.addEventListener(EvModelChanged, self.render)
+	events.forEach((ev) => {
+		model.addEventListener(ev, self.render)
+	})
 }
 
 /**
@@ -298,12 +299,13 @@ function viewBind(self, key, model) {
  * @param {string} key
  * @param {Model} model
  */
-function viewUnbind(self, key, model) {
-	if (!model) {
-		return
+function viewUnbind(self, key, model, events=[]) {
+	if (events.length == 0) {
+		events.push(EvModelChanged, EvModelError, EvModelRequest)
 	}
-	model.removeEventListener(EvModelError, self.render)
-	model.removeEventListener(EvModelChanged, self.render)
+	events.forEach((ev) => {
+		model.removeEventListener(ev, self.render)
+	})
 	self.models.delete(key)
 }
 
@@ -378,19 +380,13 @@ function viewAttachViews(self) {
  */
 function viewRender(self, ev) {
 	//console.log(`${Date.now()} view ${self.viewId} rendering`)
-	if (typeof self.template !== "string") {
-		return
-	}
 	self.dispatchEvent(new CustomEvent(EvViewRender))
 	self.detachViews()
-	let html = ""
 	try {
-		html = self.renderer(ev, self)
+		self.renderer(ev, self)
 	} catch (e) {
 		console.warn(e)
-		html = e
 	}
-	self.innerHTML = html
 	self.attachViews()
 	self.dispatchEvent(new CustomEvent(EvViewRendered))
 }
@@ -402,15 +398,14 @@ function viewRender(self, ev) {
  */
 function viewDefaultRenderer(view) {
 	console.warn("Please define your own rendering.")
-	return "No renderer provided."
 }
 
 /**
  * @typedef {EventTarget} Model
  * @property {string} url
  * @property {Object} data
- * @property {XMLHttpRequest} xhrFetch
- * @property {XMLHttpRequest} xhrSave
+ * @property {XMLHttpRequest} xhr
+ * @property {boolean} busy
  * @property {Function} fetch
  * @property {Function} save
  * @property {Function} set
@@ -427,6 +422,9 @@ function viewDefaultRenderer(view) {
 function mkModel(opts, target) {
 	if (target === undefined) {
 		target = document.createElement("div")
+	} else if (!target) {
+		throw Error("Provided target is invalid.")
+		return
 	}
 	target.url = opts.url || ""
 	target.fetch = (opts.fetch || modelFetch).bind(undefined, target, {
@@ -449,15 +447,17 @@ function mkModel(opts, target) {
  * @param {Object} opts
  * @param {Function} fn
  */
-function modelFetch(self, opts, fn) {
-	if (self.xhrFetch) {
-		self.xhrFetch.abort()
+function modelFetch(self, opts, fn = Function.prototype) {
+	if (self.xhr) {
+		return
 	}
-	self.dispatchEvent(new CustomEvent(EvModelFetch))
-	self.xhrFetch = request({
+	self.busy = true
+	self.xhr = request({
 		url: self.getUrl(),
 		cors: opts.cors,
 	}, (err, body, xhr) => {
+		self.busy = false
+		self.xhr = null
 		let ev
 		let detail = { detail: {
 			properties: body,
@@ -466,6 +466,7 @@ function modelFetch(self, opts, fn) {
 		} }
 		if (err) {
 			ev = new CustomEvent(EvModelError, detail)
+			self.error = err
 		} else {
 			ev = new CustomEvent(EvModelFetched, detail)
 			self.set(body)
@@ -473,7 +474,13 @@ function modelFetch(self, opts, fn) {
 		self.dispatchEvent(ev)
 		fn(err, body, xhr)
 	})
-	return self.xhrFetch
+	self.dispatchEvent(new CustomEvent(EvModelRequest, {
+		detail: {
+			type: ModelFetch,
+			xhr: self.xhr,
+		}
+	}))
+	return self.xhr
 }
 
 /**
@@ -482,14 +489,19 @@ function modelFetch(self, opts, fn) {
  * @param {Object} opts
  * @param {Function} fn
  */
-function modelSave(self, opts, fn) {
-	this.dispatchEvent(new CustomEvent(EvModelSave))
-	return request({
+function modelSave(self, opts, fn = Function.prototype) {
+	if (self.xhr) {
+		self.xhr.abort()
+	}
+	self.busy = true
+	self.xhr = request({
 		url: self.getUrl(),
 		method: opts.method || "POST",
 		cors: opts.cors,
 		data: self.data,
 	}, (err, body, xhr) => {
+		self.busy = false
+		self.xhr = null
 		let ev
 		let detail = { detail: {
 			properties: body,
@@ -498,6 +510,7 @@ function modelSave(self, opts, fn) {
 		} }
 		if (err) {
 			ev = new CustomEvent(EvModelError, detail)
+			self.error = err
 		} else {
 			ev = new CustomEvent(EvModelSaved, detail)
 			self.set(body)
@@ -505,6 +518,13 @@ function modelSave(self, opts, fn) {
 		self.dispatchEvent(ev)
 		fn(err, body, xhr)
 	})
+	self.dispatchEvent(new CustomEvent(EvModelRequest, {
+		detail: {
+			type: ModelSave,
+			xhr: self.xhr,
+		}
+	}))
+	return self.xhr
 }
 
 /**
@@ -552,11 +572,12 @@ function modelGetUrl(self) {
  */
 function go(url, state = {}, title = "") {
 	history.pushState(state, title, url)
-	window.dispatchEvent(new CustomEvent(EvRouteChanged, {
+	window.dispatchEvent(new CustomEvent(EvStatePush, {
 		detail: {
+			path: location.pathname,
 			state: state,
 			title: title,
-			path: location.pathname.substr(1),
+			url: url,
 		}
 	}))
 }
@@ -622,4 +643,48 @@ function interceptClick(ev) {
  */
 function isRelativeUrl(url) {
 	return !(url.indexOf("http") === 0 || url.indexOf("javascript:") === 0)
+}
+
+/**
+ * Convert an HTML form into a JavaScript object by using FormData entries. Will
+ * automatically trim array keys ("arr[]"" to "arr"). Provide a cast map to
+ * convert string values to needed values.
+ * @param {HTMLElement} form
+ * @param {Object.<string, Functon>} castMap
+ * @returns {Object}
+ */
+function formToObject(form, castMap={}) {
+	let fd = new FormData(form)
+	return Array.from(fd.entries()).reduce((obj, pair) => {
+		let key = pair[0]
+		let value = pair[1]
+		let isArray = false
+		if (key.lastIndexOf("[]") == key.length - 2) {
+			key = key.substr(0, key.length - 2)
+			isArray = true
+		}
+		if (typeof castMap[key] == "function") {
+			value = castMap[key](value)
+		}
+		if (Array.isArray(obj[key])) {
+			obj[key] = obj[key].concat(value)
+		} else if (obj[key]) {
+			obj[key] = [obj[key]].concat(value)
+		} else {
+			obj[key] = isArray ? [value] : value
+		}
+		return obj
+	}, {});
+}
+
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
+function wordToBool(value) {
+	let valids = ["yes", "on", "true", true, 1, "1"]
+	if (valids.indexOf(value) !== -1) {
+		return true
+	}
+	return false
 }
