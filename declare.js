@@ -42,7 +42,7 @@ function request(opts, done) {
 	let fn = done
 
 	if (opts.delay > 0) {
-		fn = function () {
+		fn = function delay () {
 			const now = Date.now()
 			const delta = now - start
 			if (delta > delay) {
@@ -67,10 +67,11 @@ function request(opts, done) {
 	}
 
 	let xhr = new XMLHttpRequest()
-	xhr.onreadystatechange = function onReadyStateChange() {
+	function onReadyStateChange() {
 		if (xhr.readyState !== XMLHttpRequest.DONE) {
 			return
 		}
+		xhr.removeEventListener("readystatechange", onReadyStateChange)
 		let obj, err
 		let responseContentType = xhr.getResponseHeader("Content-Type")
 
@@ -97,6 +98,7 @@ function request(opts, done) {
 		}
 		fn(err, null, xhr)
 	}
+	xhr.addEventListener("readystatechange", onReadyStateChange)
 	xhr.open(opts.method || "GET", opts.url)
 	if (typeof opts.headers === "object") {
 		Object.keys(opts.headers).forEach(key => {
@@ -318,7 +320,10 @@ function viewAdd(self, sel, view) {
 	const arr = self.views.get(sel) || []
 	arr.push(view)
 	self.views.set(sel, arr)
-	findOne(sel, self).appendChild(view)
+	let n
+	if (n = findOne(sel, self)) {
+		n.appendChild(view)
+	}
 }
 
 /**
@@ -366,10 +371,12 @@ function viewAttachViews(self) {
 	const keys = self.views.keys()
 	for (let key of keys) {
 		const root = findOne(key, self)
-		const arr = self.views.get(key)
-		arr.forEach(view => {
-			root.appendChild(view)
-		})
+		if (root) {
+			const arr = self.views.get(key)
+			arr.forEach(view => {
+				root.appendChild(view)
+			})
+		}
 	}
 }
 
@@ -687,4 +694,18 @@ function wordToBool(value) {
 		return true
 	}
 	return false
+}
+
+/**
+ * Wrap an event listener to fire only once and then remove it.
+ * @param {EventTarget} self
+ * @param {string} event
+ * @param {Function} fn
+ */
+function once(self, event, fn) {
+	function onceWrap() {
+		fn.call(fn, ...arguments)
+		self.removeEventListener(event, onceWrap)
+	}
+	self.addEventListener(event, onceWrap)
 }
